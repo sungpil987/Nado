@@ -50,3 +50,15 @@
 /* Custom background and X mark shop */
 body.has-custom-bg{background-image:linear-gradient(#fff9,#fff9),var(--custom-game-bg);background-size:cover;background-position:center;background-attachment:fixed}body.has-custom-bg .app{background:transparent}body.has-custom-bg .game-area{border-radius:20px}body.has-custom-bg .board-wrap{background:#fffef9ed}body.has-custom-bg .caption{background:#fffdf0dc;border-radius:12px;padding:8px 10px}body.has-custom-bg footer{background:#fffdf0db;border-radius:12px;padding:7px}body.has-custom-bg .heading{background:#fffdf0bd;border-radius:12px;padding:4px}body.has-custom-bg .progress{background:#fffdf0a8;border-radius:15px;padding:5px}
 .cosmetic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.cosmetic-card{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;padding:10px 8px;border:1px solid #efe4dc;border-radius:14px;background:#fffaf7;text-align:center}.cosmetic-card.equipped{border:2px solid #e9a8bd}.cosmetic-card strong{font:13px Jua,sans-serif}.cosmetic-card small{font-size:11px;color:#9c8178}.cosmetic-card button{width:100%;margin:0;padding:9px 4px;font:12px Jua,sans-serif}.cosmetic-card button:disabled{background:#eee4e5;color:#9e8588}.cosmetic-preview{width:100%;height:106px;display:grid;place-items:center;overflow:hidden;border-radius:11px;background:#f1e9e8;color:#c69ba8;font:30px Jua,sans-serif}.cosmetic-preview img{display:block;max-width:100%;max-height:100%;object-fit:contain}.background-preview img{width:100%;height:100%;object-fit:cover}.mark-preview{background:#8dc5d0}.mark-preview img{width:72px;height:72px;object-fit:contain}.cell .mark-skin{width:54%;height:54%;object-fit:contain;pointer-events:none;user-select:none}.cell .cross{pointer-events:none}@media(max-width:360px){.cosmetic-preview{height:85px}.mark-preview img{width:58px;height:58px}}
+
+/* Background visibility refinement: retain puzzle legibility */
+body.has-custom-bg{background-image:linear-gradient(rgba(255,255,255,.20),rgba(255,255,255,.20)),var(--custom-game-bg)!important;background-size:cover;background-position:center;background-attachment:fixed}
+body.has-custom-bg .board-wrap{background:rgba(255,255,255,.52);box-shadow:0 6px 22px rgba(78,49,46,.14)}
+body.has-custom-bg .rules{background:rgba(255,255,255,.72)}
+body.has-custom-bg .caption,body.has-custom-bg footer{background:rgba(255,255,255,.68)}
+body.has-custom-bg .heading{background:rgba(255,255,255,.57)}
+body.has-custom-bg .progress{background:rgba(255,255,255,.30)}
+body.has-custom-bg .cat-chip{background:rgba(255,255,255,.78)}
+body.has-custom-bg .action{background:rgba(255,255,255,.82)}
+body.has-custom-bg .action.hint{background:rgba(255,247,208,.84)}
+body.has-custom-bg .cell{background-blend-mode:normal}
