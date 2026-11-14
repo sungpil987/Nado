@@ -3,10 +3,6 @@ package com.sungpil987.nyangdoku
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.Gravity
-import android.view.View
-import android.os.Build
-import android.view.WindowInsets
-import android.view.WindowInsetsController
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
@@ -40,7 +36,9 @@ class MainActivity : android.app.Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableImmersiveMode()
+        window.statusBarColor = android.graphics.Color.rgb(250, 246, 241)
+        window.navigationBarColor = android.graphics.Color.rgb(250, 246, 241)
+        window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
         webView = WebView(this)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -54,31 +52,6 @@ class MainActivity : android.app.Activity() {
         configureWebView()
         setupBilling()
         requestConsentAndStartAds(bannerContainer)
-    }
-
-    private fun enableImmersiveMode() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.setDecorFitsSystemWindows(false)
-            window.insetsController?.let { controller ->
-                controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-                controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        } else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-            )
-        }
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) enableImmersiveMode()
     }
 
     private fun requestConsentAndStartAds(container: FrameLayout) {
