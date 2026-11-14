@@ -18,3 +18,31 @@
 
 /* Mission / attendance and feedback */
 .topbar{grid-template-columns:minmax(0,1fr) 40px 40px 40px 42px;gap:4px}.mission-launch{width:40px;height:40px;font-size:19px}.mission-dialog{max-height:84vh;overflow-y:auto}.mission-dialog .modal-close{position:sticky;top:0;float:right;width:36px;height:36px;padding:0;margin:-8px -7px 0 0;background:#f7e9e9;color:#76575b}.mission-dialog #attendanceClaim{background:#f0bc62;color:#674929}.mission-dialog #attendanceClaim:disabled{background:#f5eee8;color:#ab9891}.mission-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}.mission-dialog .mission-tabs button{background:#f6eee9;color:#94736e;font-size:13px;padding:10px 4px}.mission-dialog .mission-tabs button.active{background:#e7a9b9;color:#fff}.mission-item{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;border:1px solid #f0e6df;padding:10px;border-radius:12px;margin:8px 0}.mission-item strong{font:14px Jua,sans-serif;display:block}.mission-item small{font-size:11px;color:#a88779;display:block;margin-top:4px}.mission-dialog .mission-item button{width:92px;flex:none;font-size:12px;padding:10px 5px}.mission-item button:disabled{background:#f1eae6;color:#b1a09b}.cell.hint-glow{animation:hint-pulse .7s 2;z-index:1}.cell.mistake-flash{animation:mistake-shake .35s 2;box-shadow:inset 0 0 0 4px #e46c6c}.heart-pulse{animation:heart-bounce .35s}.reward-pop .dialog{animation:reward-bounce .7s cubic-bezier(.2,.8,.2,1.2)}@keyframes hint-pulse{50%{filter:brightness(1.25);box-shadow:0 0 0 5px #f7da72}}@keyframes mistake-shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}@keyframes heart-bounce{50%{transform:scale(1.16)}}@keyframes reward-bounce{0%{transform:scale(.8);opacity:.3}65%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+
+/* Shop v2: fixed header, tabs and footer, scrollable product area */
+.shop-v2{width:min(100%,440px);max-height:min(88dvh,760px);padding:0;display:flex;flex-direction:column;overflow:hidden;text-align:left;scrollbar-gutter:auto}
+.shop-v2 .shop-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 18px 10px}
+.shop-v2 .shop-head h2{margin:3px 0 0;font:23px Jua,sans-serif}
+.shop-eyebrow{font:10px Jua,sans-serif;letter-spacing:.12em;color:#c39b9b}
+.shop-v2 .shop-head .modal-close{position:static;float:none;flex:none;margin:0;width:38px;height:38px;padding:0;background:#f7e9e9;color:#76575b}
+.shop-wallet{flex:none;display:flex;align-items:center;justify-content:space-between;margin:0 16px 12px;padding:12px 15px;background:#fff5dc;border:1px solid #f7e5bc;border-radius:15px;color:#a3835c;font:13px Jua,sans-serif}
+.shop-wallet strong{color:#795a30;font:19px Jua,sans-serif}.shop-wallet b{font:inherit}
+.shop-tabs{flex:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:0 15px 12px;border-bottom:1px solid #f0e8e3}
+.shop-v2 .shop-tabs button{width:100%;min-width:0;margin:0;padding:11px 1px;border-radius:12px;background:#f6f0ec;color:#9d8580;font:12px Jua,sans-serif}
+.shop-v2 .shop-tabs button.active{background:#e8a9bc;color:#fff}
+.shop-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px 16px 18px}
+.shop-panel.hidden{display:none}.shop-section-description{font-size:12px;color:#9b817a;margin:0 0 12px}
+.shop-v2 .cat-slots{grid-template-columns:repeat(2,minmax(0,1fr));margin:0}
+.shop-v2 .cat-product{background:#fffaf6}
+.shop-v2 .cat-product img{height:78px}
+.shop-v2 .shop-bottom{flex:none;border-top:1px solid #f0e8e3;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));background:#fff}
+.shop-v2 .shop-bottom button{margin:0;padding:12px;background:#f5eee8;color:#826b67}
+.shop-v2 #shopPanelExtras button{margin:8px 0 0}.shop-v2 #rewardHintBtn{background:#e5b653;color:#fff}
+.shop-v2 #restoreAdsBtn{background:#f5eee8;color:#826b67}
+.shop-footnote{font-size:11px;color:#a08a83;line-height:1.5}
+.shop-coming{text-align:center;padding:35px 14px 50px;background:#fffaf6;border:1px dashed #ead8ce;border-radius:18px}
+.shop-coming>span{display:grid;place-items:center;margin:0 auto 12px;width:64px;height:64px;border-radius:18px;background:#f6e5ed;color:#c78da2;font:38px Jua,sans-serif}
+.shop-coming h3{font:19px Jua,sans-serif;margin:6px 0}
+.shop-coming p{font-size:13px;line-height:1.6;color:#927a76}
+.shop-coming small{font-size:11px;color:#b5a29b}
+@media(max-width:360px){.shop-v2 .shop-tabs button{font-size:11px}.shop-v2 .shop-head{padding:14px 14px 8px}.shop-scroll{padding:12px}}
