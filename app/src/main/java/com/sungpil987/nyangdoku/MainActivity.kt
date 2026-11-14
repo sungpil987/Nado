@@ -178,7 +178,7 @@ class MainActivity : android.app.Activity() {
             QueryProductDetailsParams.newBuilder().setProductList(listOf(item)).build()
         ) { result, details ->
             if (result.responseCode == BillingClient.BillingResponseCode.OK)
-                removeAdsDetails = details.productDetailsList.firstOrNull()
+                removeAdsDetails = details.firstOrNull()
         }
     }
     private fun queryOwnedPurchases() {
