@@ -74,7 +74,7 @@
   ];
   function showTutorial(){tutorialStep=0;updateTutorial();$('modal').classList.remove('hidden')}
   function updateTutorial(){$('modalTitle').textContent=tutorialPages[tutorialStep][0];$('modalText').textContent=tutorialPages[tutorialStep][1];$('modalButton').textContent=tutorialStep===tutorialPages.length-1?'시작하자냥!':'다음이다냥';}
-  function advanceModal(){if(stageFailed){restartStage();return}if(tutorialStep>=0){tutorialStep++;if(tutorialStep<tutorialPages.length){updateTutorial();return}tutorialStep=-1;save.tutorialDone=true;persist();$('modal').classList.add('hidden');return}if(!clearPending){next();return}$('modal').classList.add('hidden')}
+  function advanceModal(){if(stageFailed){restartStage();return}if(tutorialStep>=0){tutorialStep++;if(tutorialStep<tutorialPages.length){updateTutorial();return}tutorialStep=-1;save.tutorialDone=true;persist();$('modal').classList.add('hidden');return}if(clearPending){next();return}$('modal').classList.add('hidden')}
   let adFree=false;
   let rewardBusy=false;
   const rewardKey=()=>gameMode==='daily'?'daily:'+dailyDateKey:'stage:'+save.level;
