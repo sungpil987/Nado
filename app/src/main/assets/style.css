@@ -62,3 +62,35 @@ body.has-custom-bg .cat-chip{background:rgba(255,255,255,.78)}
 body.has-custom-bg .action{background:rgba(255,255,255,.82)}
 body.has-custom-bg .action.hint{background:rgba(255,247,208,.84)}
 body.has-custom-bg .cell{background-blend-mode:normal}
+
+/* 0.9.1 Immersive game screen: artwork first, crisp readable labels */
+.app{gap:12px}
+.app>.topbar,.app>.progress,.app>.game-area,.app>.actions,.app>footer{position:relative;z-index:1}
+.app>.topbar{margin-top:2px}
+.app .heading{padding:4px 2px;background:transparent!important;border-radius:0!important}
+.app .eyebrow{font:19px Jua,sans-serif;color:#fff7df;letter-spacing:.03em;-webkit-text-stroke:.65px #56342c;text-shadow:0 2px 1px #4c2b25,0 3px 7px #1c1223bb}
+.app #screenHeading{font:clamp(29px,7vw,40px)/1.13 Jua,sans-serif;color:#fffef7;-webkit-text-stroke:1px #4b2a23;text-shadow:0 3px 1px #43221e,0 4px 8px #180d21bb}
+.app .progress{min-height:95px;background:transparent!important;padding:0!important}
+.app .cat-chip{background:#fff9ed!important;border:1.5px solid #69483a;box-shadow:0 3px 5px #130f2040;padding:6px 12px 6px 6px}
+.app .cat-chip span{font:clamp(12px,3.3vw,16px) Jua,sans-serif;color:#533327}
+.app .cat-chip img{width:44px;height:44px}
+.app .score{font:16px Jua,sans-serif;color:#fffef3;text-shadow:0 2px 2px #31191c,0 3px 6px #1a1026cc}
+.app .score>b{font:clamp(28px,7vw,37px) Jua,sans-serif;color:#fffdf2;-webkit-text-stroke:.7px #573025;text-shadow:0 3px 2px #3a201d,0 4px 7px #170e1cbb}
+.app .coin-count,.app .coin-count b{font:clamp(14px,3.5vw,18px) Jua,sans-serif;color:#ffe16a;text-shadow:0 2px 2px #42281e,0 3px 5px #120e1e}
+.app .hearts{font:20px Jua,sans-serif;color:#ff6b8b;-webkit-text-stroke:.7px #74353c;text-shadow:0 2px 3px #1a0d21}
+.app .game-area{min-height:220px}
+.app .board-wrap{padding:0!important;border:0!important;background:transparent!important;border-radius:0!important;box-shadow:none!important}
+.app .board{gap:clamp(5px,1.1vw,8px)}
+.app .cell{border-radius:clamp(9px,2.5vw,15px);box-shadow:0 3px 0 #382d3780,0 5px 8px #1c182750}
+.app .cell.region-0{background:#f1c94c}.app .cell.region-1{background:#66b8df}.app .cell.region-2{background:#a6d88f}.app .cell.region-3{background:#eaa4c5}
+.app .caption{background:transparent!important;padding:12px 3px 0;color:#fffdf5;font:13px Jua,sans-serif;text-shadow:0 2px 2px #352322,0 2px 7px #170f20}
+.app .caption .dot{width:9px;height:9px;box-shadow:0 1px 3px #332319}
+.app .actions{gap:12px}
+.app .action{min-height:65px;border-radius:20px;border:1.5px solid #704d3c;background:#fff7e8!important;color:#5a3227;box-shadow:0 4px 0 #4c3028a0,0 7px 11px #180d203d}
+.app .action.hint{background:#ffdc69!important;color:#694021}
+.app .action small{font:clamp(16px,4vw,21px) Jua,sans-serif}
+.app .action>span{font-size:26px}
+.app>footer{background:transparent!important;color:#fffdf1;font:12px Jua,sans-serif;text-shadow:0 2px 2px #3a2222,0 3px 7px #1a0c20}
+body.has-custom-bg{background-image:var(--custom-game-bg)!important}
+body.has-custom-bg .app .heading,body.has-custom-bg .app .progress,body.has-custom-bg .app footer,body.has-custom-bg .app .caption{background:transparent!important}
+@media(max-width:360px){.app{padding-left:14px;padding-right:14px;gap:10px}.app .progress{min-height:82px}.app .cat-chip span{font-size:11px}.app .cat-chip img{width:36px;height:36px}.app .score>b{font-size:27px}}
