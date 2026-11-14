@@ -81,7 +81,7 @@
   function updateShop(){const label=$('purchaseAdsBtn');if(label)label.textContent=adFree?'광고 제거 구매 완료':'광고 제거 영구 구매 · ₩3,900';const reward=$('rewardHintBtn');if(reward)reward.textContent=adFree?'무료 힌트 +2 (한 판 1회)':'광고 보고 힌트 +2'}
   function showShop(){$('shopModal').classList.remove('hidden');updateShop();window.NyangdokuAds?.isAdFree?.()}
   function rewardHints(){if(rewardBusy)return;if(adFree){if(save.freeHintClaimed?.[rewardKey()]){showToast('이번 판 무료 힌트는 이미 받았어');return}save.freeHintClaimed ||= {};save.freeHintClaimed[rewardKey()]=true;save.hints+=2;persist();$('hints').textContent=save.hints;showToast('무료 힌트 2개 획득!');return}if(!window.NyangdokuAds?.showRewardedAd){showToast('Android 앱에서 이용할 수 있어');return}rewardBusy=true;window.NyangdokuAds.showRewardedAd('hint')}
-  function getHint(){if(save.hints>0){save.hints--;persist();$('hints').textContent=save.hints;revealHint();return}if(window.NyangdokuAds?.showRewardedAd){window.NyangdokuAds.showRewardedAd('hint')}else showToast('광고 힌트는 Android 앱에서 이용할 수 있어')}
+  function getHint(){if(save.hints>0){save.hints--;persist();$('hints').textContent=save.hints;revealHint();return}showShop()}
   function revealHint(){const options=puzzle.cats.map(([r,c])=>r*puzzle.n+c).filter(i=>cells[i]!==2);if(!options.length){showToast('모든 고양이를 이미 찾았어!');return}const i=options[0];setCell(i,2);$('caption').textContent='힌트로 고양이 한 마리를 찾았어';showToast('힌트 고양이 발견!')}
   window.onRewardedAd=kind=>{rewardBusy=false;if(kind==='hint'){save.hints+=2;persist();$('hints').textContent=save.hints;showToast('힌트 2개 획득!')}else if(kind==='double'){save.score+=puzzle.n*100;persist();$('score').textContent=save.score;showToast('점수 두 배 보상을 받았어!')}};
   window.onAdUnavailable=()=>{rewardBusy=false;showToast('광고가 아직 준비되지 않았어. 잠시 후 다시 눌러줘')};
