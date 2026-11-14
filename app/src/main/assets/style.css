@@ -105,3 +105,8 @@ body.has-custom-bg .app .eyebrow,body.has-custom-bg .app #screenHeading,body.has
 body.has-custom-bg .app .cat-chip{background:#ffffffdf!important}
 body.has-custom-bg .app .cat-chip span{color:#634c45;text-shadow:none}
 body.has-custom-bg .app .round{background:#fff!important}
+
+/* Larger puzzles: keep cats and X marks inside 10-12 column tiles */
+.board:has(.cell:nth-child(100)) .cell .cross{font-size:clamp(12px,3.5vw,22px)}
+.board:has(.cell:nth-child(100)) .cell{border-radius:5px}
+.board:has(.cell:nth-child(100)) .cell img{width:98%;height:98%}
