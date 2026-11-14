@@ -11,15 +11,15 @@
   function persist(){localStorage.setItem(saveKey,JSON.stringify(save))}
   save.coins=Number.isFinite(save.coins)?save.coins:0;save.ownedCats ||= ['default'];save.equippedCat ||= 'default';
   const catCatalog=[
-    {id:'cheese',name:'치즈냥이',price:10000,file:'cats/cheese.png'},
-    {id:'gray',name:'회색냥이',price:10000,file:'cats/gray.png'},
-    {id:'calico',name:'삼색냥이',price:10000,file:'cats/calico.png'},
-    {id:'siamese',name:'샴냥이',price:10000,file:'cats/siamese.png'},
-    {id:'tuxedo',name:'턱시도냥이',price:10000,file:'cats/tuxedo.png'},
-    {id:'wildgray',name:'야생냥이',price:10000,file:'cats/wildgray.png'},
-    {id:'tiger',name:'호랑이',price:10000,file:'cats/tiger.png'},
-    {id:'lion',name:'사자',price:10000,file:'cats/lion.png'},
-    {id:'leopard',name:'표범',price:10000,file:'cats/leopard.png'}
+    {id:'cheese',name:'치즈냥이',price:10000,file:'cheese.png'},
+    {id:'gray',name:'회색냥이',price:10000,file:'gray.png'},
+    {id:'calico',name:'삼색냥이',price:10000,file:'calico.png'},
+    {id:'siamese',name:'샴냥이',price:10000,file:'siamese.png'},
+    {id:'tuxedo',name:'턱시도냥이',price:10000,file:'tuxedo.png'},
+    {id:'wildgray',name:'야생냥이',price:10000,file:'wildgray.png'},
+    {id:'tiger',name:'호랑이',price:10000,file:'tiger.png'},
+    {id:'lion',name:'사자',price:10000,file:'lion.png'},
+    {id:'leopard',name:'표범',price:10000,file:'leopard.png'}
   ];
   const selectedCat=()=>catCatalog.find(x=>x.id===save.equippedCat);
   const catImage=()=>selectedCat()?.file||'cat.png';
