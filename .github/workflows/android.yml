@@ -1,4 +1,5 @@
 name: Android debug APK
+# Rebuild after launcher icon and UI asset uploads
 on:
   push:
     branches: [main]
