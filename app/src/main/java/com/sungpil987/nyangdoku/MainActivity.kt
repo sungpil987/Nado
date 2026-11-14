@@ -6,13 +6,12 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.activity.ComponentActivity
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 
-class MainActivity : ComponentActivity() {
+class MainActivity : android.app.Activity() {
     private lateinit var webView: WebView
     private var rewardedAd: RewardedAd? = null
     private var requestedReward = "hint"
