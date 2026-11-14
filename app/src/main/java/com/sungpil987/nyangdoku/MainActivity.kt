@@ -139,7 +139,9 @@ class MainActivity : android.app.Activity() {
             runOnUiThread {
                 if (!BuildConfig.DEBUG) {
                     webView.evaluateJavascript("window.onAdUnavailable && window.onAdUnavailable()", null)
-                    return@runOnUiThread\n                }\n                rewardRequest = if (reward == "double") "double" else "hint"
+                    return@runOnUiThread
+                }
+                rewardRequest = if (reward == "double") "double" else "hint"
                 val ad = rewarded
                 if (ad == null) {
                     webView.evaluateJavascript("window.onAdUnavailable && window.onAdUnavailable()", null)
