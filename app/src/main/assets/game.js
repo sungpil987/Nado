@@ -10,16 +10,16 @@
   function loadSave(){try{const s=Object.assign({level:1,score:0,hints:2,solved:0,stageCache:{},stageAttempts:{},stageMistakes:{},seenStageKeys:[],dailyPuzzles:{},dailyResults:{},dailyProgress:{},dailyWins:0},JSON.parse(localStorage.getItem(saveKey)||'{}'));if(s.puzzleVersion!==6){s.stageCache={};s.stageAttempts={};s.stageMistakes={};s.seenStageKeys=[];s.puzzleVersion=6}s.stageCache ||= {};s.stageAttempts ||= {};s.stageMistakes ||= {};s.seenStageKeys ||= [];s.dailyPuzzles ||= {};s.dailyResults ||= {};s.dailyProgress ||= {};return s}catch{return {level:1,score:0,hints:2,solved:0,stageCache:{},stageAttempts:{},stageMistakes:{},seenStageKeys:[],dailyPuzzles:{},dailyResults:{},dailyProgress:{},dailyWins:0,puzzleVersion:6}}}
   function persist(){localStorage.setItem(saveKey,JSON.stringify(save))}
   save.coins=Number.isFinite(save.coins)?save.coins:0;save.ownedCats ||= ['default'];save.equippedCat ||= 'default';
+  if(save.equippedCat==='tuxedo'){save.equippedCat='default';persist()}
   const catCatalog=[
-    {id:'cheese',name:'치즈냥이',price:10000,file:'cheese.png'},
-    {id:'gray',name:'회색냥이',price:10000,file:'gray.png'},
-    {id:'calico',name:'삼색냥이',price:10000,file:'calico.png'},
-    {id:'siamese',name:'샴냥이',price:10000,file:'siamese.png'},
-    {id:'tuxedo',name:'턱시도냥이',price:10000,file:'tuxedo.png'},
-    {id:'wildgray',name:'야생냥이',price:10000,file:'wildgray.png'},
-    {id:'tiger',name:'호랑이',price:10000,file:'tiger.png'},
-    {id:'lion',name:'사자',price:10000,file:'lion.png'},
-    {id:'leopard',name:'표범',price:10000,file:'leopard.png'}
+    {id:'cheese',name:'치즈냥이',price:1,file:'cheese.png'},
+    {id:'gray',name:'회색냥이',price:1,file:'gray.png'},
+    {id:'calico',name:'삼색냥이',price:1,file:'calico.png'},
+    {id:'siamese',name:'샴냥이',price:1,file:'siamese.png'},
+    {id:'wildgray',name:'야생냥이',price:1,file:'wildgray.png'},
+    {id:'tiger',name:'호랑이',price:1,file:'tiger.png'},
+    {id:'lion',name:'사자',price:1,file:'lion.png'},
+    {id:'leopard',name:'표범',price:1,file:'leopard.png'}
   ];
   const selectedCat=()=>catCatalog.find(x=>x.id===save.equippedCat);
   const catImage=()=>selectedCat()?.file||'cat.png';
