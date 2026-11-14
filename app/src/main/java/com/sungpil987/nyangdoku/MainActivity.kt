@@ -16,6 +16,7 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.google.android.ump.*
+import com.android.billingclient.api.*
 
 class MainActivity : android.app.Activity() {
     private lateinit var webView: WebView
@@ -25,10 +26,13 @@ class MainActivity : android.app.Activity() {
     private var adsStarted = false
     private var transitionPending = false
     private var rewardRequest = "hint"
+    private var adFree = false
+    private var billing: BillingClient? = null
+    private var removeAdsDetails: ProductDetails? = null
 
     private val bannerId get() = if (BuildConfig.DEBUG) "ca-app-pub-3940256099942544/9214589741" else "ca-app-pub-5753154803143305/3592753810"
     private val interstitialId get() = if (BuildConfig.DEBUG) "ca-app-pub-3940256099942544/1033173712" else "ca-app-pub-5753154803143305/7340427138"
-    private val rewardedId = "ca-app-pub-3940256099942544/5224354917" // Rewarded monetization not configured yet: test-only.
+    private val rewardedId get() = if (BuildConfig.DEBUG) "ca-app-pub-3940256099942544/5224354917" else "ca-app-pub-5753154803143305/9651904863"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +50,7 @@ class MainActivity : android.app.Activity() {
         root.addView(bannerContainer, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         setContentView(root)
         configureWebView()
+        setupBilling()
         requestConsentAndStartAds(bannerContainer)
     }
 
@@ -69,6 +74,7 @@ class MainActivity : android.app.Activity() {
         adsStarted = true
         MobileAds.initialize(this) {
             runOnUiThread {
+                if (adFree) return@runOnUiThread
                 val ad = AdView(this)
                 banner = ad
                 ad.adUnitId = bannerId
@@ -79,7 +85,7 @@ class MainActivity : android.app.Activity() {
                 container.addView(ad, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER))
                 ad.loadAd(AdRequest.Builder().build())
                 loadInterstitial()
-                if (BuildConfig.DEBUG) loadRewarded()
+                loadRewarded()
             }
         }
     }
@@ -109,6 +115,7 @@ class MainActivity : android.app.Activity() {
 
     private fun showInterstitialBetweenLevels() {
         if (transitionPending) return
+        if (adFree) { continueLevel(); return }
         transitionPending = true
         val ad = interstitial
         interstitial = null
@@ -132,15 +139,14 @@ class MainActivity : android.app.Activity() {
     }
 
     private inner class AdsBridge {
+        @JavascriptInterface fun buyRemoveAds() { runOnUiThread { purchaseRemoveAds() } }
+        @JavascriptInterface fun restorePurchases() { runOnUiThread { queryOwnedPurchases() } }
+        @JavascriptInterface fun isAdFree() { runOnUiThread { sendAdFreeStatus() } }
         @JavascriptInterface fun showInterstitialAtMilestone() {
             runOnUiThread { showInterstitialBetweenLevels() }
         }
         @JavascriptInterface fun showRewardedAd(reward: String) {
             runOnUiThread {
-                if (!BuildConfig.DEBUG) {
-                    webView.evaluateJavascript("window.onAdUnavailable && window.onAdUnavailable()", null)
-                    return@runOnUiThread
-                }
                 rewardRequest = if (reward == "double") "double" else "hint"
                 val ad = rewarded
                 if (ad == null) {
@@ -158,6 +164,7 @@ class MainActivity : android.app.Activity() {
     }
 
     override fun onDestroy() {
+        billing?.endConnection()
         banner?.destroy()
         webView.destroy()
         super.onDestroy()
