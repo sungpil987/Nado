@@ -138,6 +138,88 @@ class MainActivity : android.app.Activity() {
         })
     }
 
+
+    private fun sendAdFreeStatus() {
+        webView.evaluateJavascript("window.onAdFreeStatus && window.onAdFreeStatus($adFree)", null)
+    }
+    private fun setAdFree(owned: Boolean) {
+        adFree = owned
+        if (owned) {
+            banner?.destroy()
+            banner = null
+            findViewById<ViewGroup>(android.R.id.content)
+                .findViewWithTag<FrameLayout>("bannerContainer")?.removeAllViews()
+            interstitial = null
+        }
+        sendAdFreeStatus()
+    }
+    private fun setupBilling() {
+        billing = BillingClient.newBuilder(this)
+            .setListener { result, purchases ->
+                if (result.responseCode == BillingClient.BillingResponseCode.OK)
+                    purchases?.forEach { handlePurchase(it) }
+            }
+            .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
+            .build()
+        billing?.startConnection(object : BillingClientStateListener {
+            override fun onBillingServiceDisconnected() {}
+            override fun onBillingSetupFinished(result: BillingResult) {
+                if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                    queryOwnedPurchases()
+                    queryRemoveAdsDetails()
+                }
+            }
+        })
+    }
+    private fun queryRemoveAdsDetails() {
+        val item = QueryProductDetailsParams.Product.newBuilder()
+            .setProductId("remove_ads").setProductType(BillingClient.ProductType.INAPP).build()
+        billing?.queryProductDetailsAsync(
+            QueryProductDetailsParams.newBuilder().setProductList(listOf(item)).build()
+        ) { result, details ->
+            if (result.responseCode == BillingClient.BillingResponseCode.OK)
+                removeAdsDetails = details.productDetailsList.firstOrNull()
+        }
+    }
+    private fun queryOwnedPurchases() {
+        billing?.queryPurchasesAsync(
+            QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build()
+        ) { result, purchases ->
+            if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                runOnUiThread {
+                    setAdFree(purchases.any {
+                        it.products.contains("remove_ads") &&
+                            it.purchaseState == Purchase.PurchaseState.PURCHASED
+                    })
+                    purchases.forEach { handlePurchase(it) }
+                }
+            }
+        }
+    }
+    private fun handlePurchase(purchase: Purchase) {
+        if (!purchase.products.contains("remove_ads") ||
+            purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return
+        runOnUiThread { setAdFree(true) }
+        if (!purchase.isAcknowledged)
+            billing?.acknowledgePurchase(
+                AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
+            ) { }
+    }
+    private fun purchaseRemoveAds() {
+        if (adFree) return
+        val details = removeAdsDetails
+        if (details == null) {
+            queryRemoveAdsDetails()
+            webView.evaluateJavascript("window.onBillingMessage && window.onBillingMessage('Play Console에서 remove_ads 상품을 활성화해줘')", null)
+            return
+        }
+        billing?.launchBillingFlow(this,
+            BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(
+                BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).build()
+            )).build()
+        )
+    }
+
     private inner class AdsBridge {
         @JavascriptInterface fun buyRemoveAds() { runOnUiThread { purchaseRemoveAds() } }
         @JavascriptInterface fun restorePurchases() { runOnUiThread { queryOwnedPurchases() } }
