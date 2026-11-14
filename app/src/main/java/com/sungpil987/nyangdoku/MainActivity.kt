@@ -3,6 +3,7 @@ package com.sungpil987.nyangdoku
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
@@ -36,9 +37,7 @@ class MainActivity : android.app.Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.statusBarColor = android.graphics.Color.rgb(250, 246, 241)
-        window.navigationBarColor = android.graphics.Color.rgb(250, 246, 241)
-        window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        applyGameFullscreen()
         webView = WebView(this)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -52,6 +51,22 @@ class MainActivity : android.app.Activity() {
         configureWebView()
         setupBilling()
         requestConsentAndStartAds(bannerContainer)
+    }
+
+    // Keep content inside the system-managed window; avoid edge-to-edge inset changes.
+    // This hides system bars without placing the adaptive banner behind gesture navigation.
+    private fun applyGameFullscreen() {
+        @Suppress("DEPRECATION")
+        window.decorView.systemUiVisibility = (
+            View.SYSTEM_UI_FLAG_FULLSCREEN or
+            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        )
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) applyGameFullscreen()
     }
 
     private fun requestConsentAndStartAds(container: FrameLayout) {
