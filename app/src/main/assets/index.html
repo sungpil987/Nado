@@ -27,8 +27,29 @@
     </section>
     <footer><span id="levelInfo">4 × 4 · 고양이 4마리</span></footer>
     <div class="modal hidden" id="missionModal"><div class="dialog mission-dialog"><button type="button" class="modal-close" id="missionCloseX" aria-label="미션 닫기">×</button><h2>냥냥 미션</h2><p id="attendanceStatus">출석 확인 중이다냥!</p><button id="attendanceClaim">오늘의 출석 보상 받기</button><p id="missionStreak"></p><div class="mission-tabs"><button id="dailyMissionTab" class="active">일일 미션</button><button id="weeklyMissionTab">주간 미션</button></div><div id="missionList"></div></div></div>
-    <div class="modal hidden" id="shopModal"><div class="dialog shop-dialog"><button type="button" class="modal-close" id="shopCloseX" aria-label="상점 닫기">×</button><img src="cat.png" alt=""><h2>냥도쿠 상점</h2><p>광고 제거는 영구 구매야. 구매하면 한 판에 한 번 무료 힌트 2개를 받을 수 있어.</p><button id="purchaseAdsBtn">광고 제거 영구 구매 · ₩3,900</button><button id="restoreAdsBtn">구매 복원</button><button id="rewardHintBtn">광고 보고 힌트 +2</button><div class="cat-shop-section"><h3>고양이 아이콘 상점</h3><p>새 고양이 아이콘은 곧 입고된다냥!</p><div class="cat-slots" id="catShopGrid"></div><p>보유 🐟 <b id="shopCoins">0</b> 코인</p></div><button id="closeShopBtn">닫기</button></div></div>
-    <div class="toast" id="toast" role="status"></div>
+    <div class="modal hidden" id="shopModal">
+      <div class="dialog shop-dialog shop-v2">
+        <header class="shop-head">
+          <div><span class="shop-eyebrow">NYANGDOKU COLLECTION</span><h2>냥도쿠 상점</h2></div>
+          <button type="button" class="modal-close" id="shopCloseX" aria-label="상점 닫기">×</button>
+        </header>
+        <div class="shop-wallet"><span>내 보유 코인</span><strong>🐟 <b id="shopCoins">0</b></strong></div>
+        <nav class="shop-tabs" aria-label="상점 카테고리">
+          <button type="button" class="active" id="shopTabCats" aria-selected="true">고양이</button>
+          <button type="button" id="shopTabBackgrounds" aria-selected="false">배경</button>
+          <button type="button" id="shopTabMarks" aria-selected="false">X 스킨</button>
+          <button type="button" id="shopTabExtras" aria-selected="false">기타</button>
+        </nav>
+        <div class="shop-scroll">
+          <section id="shopPanelCats" class="shop-panel"><p class="shop-section-description">좋아하는 냥이를 골라서 퍼즐에 데려가 봐!</p><div class="cat-slots" id="catShopGrid"></div></section>
+          <section id="shopPanelBackgrounds" class="shop-panel hidden"><div class="shop-coming"><span>▧</span><h3>배경 꾸미기</h3><p>직접 만든 배경이 도착하면 여기에 등록할 거야.</p><small>이미지 등록 전에는 구매할 수 없어</small></div></section>
+          <section id="shopPanelMarks" class="shop-panel hidden"><div class="shop-coming"><span>×</span><h3>X 표시 스킨</h3><p>직접 만든 X 스킨이 도착하면 여기에 등록할 거야.</p><small>이미지 등록 전에는 구매할 수 없어</small></div></section>
+          <section id="shopPanelExtras" class="shop-panel hidden"><h3>편의 기능</h3><p class="shop-section-description">광고 및 구매 관리는 이곳에서 할 수 있어.</p><button id="rewardHintBtn">광고 보고 힌트 +2</button><button id="purchaseAdsBtn">광고 제거 영구 구매 · ₩3,900</button><button id="restoreAdsBtn">구매 복원</button><p class="shop-footnote">광고 제거 구매 시 한 판에 한 번 무료 힌트 2개를 받을 수 있어.</p></section>
+        </div>
+        <div class="shop-bottom"><button id="closeShopBtn">상점 닫기</button></div>
+      </div>
+    </div>
+        <div class="toast" id="toast" role="status"></div>
     <div class="modal hidden" id="modal"><div class="dialog"><button type="button" class="modal-close" id="gameCloseX" aria-label="창 닫기">×</button><img id="gameModalCat" src="cat.png" alt=""><h2 id="modalTitle">참 잘했다냥!</h2><p id="modalText"></p><div id="tutorialDemo" class="tutorial-demo hidden"></div><div id="tutorialCounter" class="tutorial-counter hidden"></div><button id="modalButton">계속하기</button></div></div>
   </main>
   <section class="daily-screen hidden" id="dailyScreen" aria-label="데일리 챌린지">
