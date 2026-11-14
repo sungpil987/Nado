@@ -79,7 +79,7 @@ class MainActivity : android.app.Activity() {
                 container.addView(ad, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER))
                 ad.loadAd(AdRequest.Builder().build())
                 loadInterstitial()
-                loadRewarded()
+                if (BuildConfig.DEBUG) loadRewarded()
             }
         }
     }
@@ -137,7 +137,9 @@ class MainActivity : android.app.Activity() {
         }
         @JavascriptInterface fun showRewardedAd(reward: String) {
             runOnUiThread {
-                rewardRequest = if (reward == "double") "double" else "hint"
+                if (!BuildConfig.DEBUG) {
+                    webView.evaluateJavascript("window.onAdUnavailable && window.onAdUnavailable()", null)
+                    return@runOnUiThread\n                }\n                rewardRequest = if (reward == "double") "double" else "hint"
                 val ad = rewarded
                 if (ad == null) {
                     webView.evaluateJavascript("window.onAdUnavailable && window.onAdUnavailable()", null)
