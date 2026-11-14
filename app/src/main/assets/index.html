@@ -8,7 +8,8 @@
   <main class="app">
     <header class="topbar">
       <button class="round back" id="backBtn" aria-label="이전 레벨">‹</button>
-      <div class="heading"><div class="eyebrow">냥도쿠</div><h1>레벨 <span id="level">1</span></h1></div>
+      <div class="heading"><div class="eyebrow">냥도쿠</div><h1 id="screenHeading">레벨 1</h1></div>
+      <button class="round daily-launch" id="dailyBtn" aria-label="데일리 챌린지">🏆</button>
       <button class="round settings" id="settingsBtn" aria-label="설정">⚙</button>
     </header>
     <section class="progress"><div class="cat-chip"><img src="cat.png" alt="냥도쿠 고양이"><span id="mood">오늘도 한 판!</span></div><div class="score"><span>점수</span><b id="score">0</b><div class="hearts" id="hearts" aria-label="실수 기회 3회">♥ ♥ ♥</div></div></section>
@@ -26,6 +27,22 @@
     <div class="toast" id="toast" role="status"></div>
     <div class="modal hidden" id="modal"><div class="dialog"><img src="cat.png" alt=""><h2 id="modalTitle">참 잘했어!</h2><p id="modalText"></p><button id="modalButton">계속하기</button></div></div>
   </main>
+  <section class="daily-screen hidden" id="dailyScreen" aria-label="데일리 챌린지">
+    <div class="daily-hero">
+      <header class="daily-header"><button class="daily-icon" id="dailyBack" aria-label="게임으로 돌아가기">‹</button><h2>데일리 챌린지</h2><button class="daily-icon" id="dailyInfo" aria-label="챌린지 안내">ⓘ</button><button class="daily-icon cup-small" aria-label="월간 트로피">♜</button></header>
+      <div class="daily-summary">
+        <div class="daily-month"><div id="dailyYear">2026</div><div class="month-line"><button id="prevMonth" aria-label="이전 달">‹</button><strong id="dailyMonthTitle">11월</strong><button id="nextMonth" aria-label="다음 달">›</button></div><div class="month-count">🏅 <span id="monthlyCount">0/30</span></div></div>
+        <div class="trophy-display" aria-label="월간 트로피">🏆</div>
+      </div>
+      <div class="trophy-progress"><div class="progress-line"><div class="progress-fill" id="trophyFill"></div></div><div class="milestone bronze"><span>🏆</span><b>10</b></div><div class="milestone silver"><span>🏆</span><b>20</b></div><div class="milestone gold"><span>🏆</span><b>30</b></div></div>
+    </div>
+    <div class="daily-calendar-wrap">
+      <div class="weekdays"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+      <div class="daily-start-panel"><div id="dailySelectedLabel">11/14/26</div><div class="daily-difficulty" id="dailyDifficulty">오늘의 난이도 · 새싹</div><button id="dailyContinue">계속하기</button></div>
+    </div>
+    <div class="daily-info-toast" id="dailyInfoToast"></div>
+  </section>
   <script src="game.js"></script>
 </body>
 </html>
