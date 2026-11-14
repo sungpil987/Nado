@@ -7,3 +7,5 @@
 
 /* Shop */
 .topbar{grid-template-columns:44px 1fr 42px 42px 44px;gap:3px}.shop-launch{font-size:19px;width:42px;height:42px}.shop-dialog{max-height:85vh;overflow-y:auto}.shop-dialog button{margin-top:9px}.shop-dialog #restoreAdsBtn,.shop-dialog #closeShopBtn{background:#f5eee8;color:#826b67}.shop-dialog #rewardHintBtn{background:#e5b653;color:#fff}
+
+.topbar{grid-template-columns:minmax(0,1fr) 42px 42px 44px;gap:5px}.heading{text-align:left;padding-left:6px}.actions{grid-template-columns:repeat(2,minmax(0,1fr))}footer{justify-content:center;text-align:center}.coin-count{display:block;margin-top:3px;color:#b78b43;font:12px Jua,sans-serif}.coin-count b{display:inline;font:13px Jua,sans-serif;color:#9b722c}.cat-shop-section{border-top:1px solid #eee4dc;margin-top:16px;padding-top:12px}.cat-shop-section h3{font:17px Jua,sans-serif;margin:3px 0}.cat-shop-section p{font-size:12px}.cat-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.cat-slot{aspect-ratio:1;border:2px dashed #e9d9d0;border-radius:14px;background:#faf6f1;color:#baa9a1;display:grid;place-items:center;font:12px Jua,sans-serif}
