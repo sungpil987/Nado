@@ -110,3 +110,10 @@ body.has-custom-bg .app .round{background:#fff!important}
 .board:has(.cell:nth-child(100)) .cell .cross{font-size:clamp(12px,3.5vw,22px)}
 .board:has(.cell:nth-child(100)) .cell{border-radius:5px}
 .board:has(.cell:nth-child(100)) .cell img{width:98%;height:98%}
+
+/* Distinct wrong-answer feedback: red cross, tinted tile and brief shake */
+.cell.mistake-flash{animation:wrong-tile-shake .42s ease-in-out 2!important;box-shadow:inset 0 0 0 4px #e43146,0 0 0 3px #ffedef,0 5px 14px #bd263d80!important;z-index:3}
+.cell.mistake-flash::after{content:'';position:absolute;inset:0;background:#e91f3e66;pointer-events:none;z-index:2}
+.cell .wrong-x{position:absolute;inset:0;display:grid;place-items:center;font:900 clamp(28px,10vw,64px)/1 Arial,sans-serif;color:#fff;text-shadow:0 3px 0 #a50f2a,0 4px 10px #61071c;z-index:4;pointer-events:none;animation:wrong-x-pop .3s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes wrong-tile-shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+@keyframes wrong-x-pop{0%{opacity:0;transform:scale(.35) rotate(-18deg)}75%{opacity:1;transform:scale(1.18) rotate(3deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
