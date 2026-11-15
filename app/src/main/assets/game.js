@@ -98,7 +98,7 @@
     setTimeout(()=>{mark.remove();cell.classList.remove('mistake-flash')},950);
   }
   function setCell(i,value,check=true){
-    if(stageFailed||clearPending||isFixed(i))return;
+    if(stageFailed||clearPending||mistakes>=3||isFixed(i))return;
     const previous=cells[i];
     if(value===2&&previous===2)value=0;
     if(previous===value)return;
