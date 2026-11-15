@@ -155,6 +155,48 @@
     setTimeout(()=>cell.classList.remove('x-mark-pop','x-mark-clear'),190);
     if(added)playXSound();
   }
+  let lastGameSoundAt=0;
+  function gameTone(kind){
+    const now=performance.now();
+    if(now-lastGameSoundAt<65&&kind!=='wrong')return;
+    lastGameSoundAt=now;
+    try{
+      const AudioContextType=window.AudioContext||window.webkitAudioContext;
+      if(!AudioContextType)return;
+      if(!xAudioContext)xAudioContext=new AudioContextType();
+      if(xAudioContext.state==='suspended')xAudioContext.resume().catch(()=>{});
+      const ctx=xAudioContext,t=ctx.currentTime;
+      const tones={
+        cat:[[520,780,.12,.055],[780,980,.1,.035]],
+        wrong:[[240,125,.18,.075]],
+        undo:[[440,330,.08,.028]],
+        hint:[[620,900,.16,.042],[900,1240,.17,.032]],
+        win:[[523,659,.12,.04],[659,784,.13,.04],[784,1046,.22,.05]]
+      };
+      let offset=0;
+      for(const [from,to,duration,volume] of tones[kind]||[]){
+        const osc=ctx.createOscillator(),gain=ctx.createGain(),at=t+offset;
+        osc.type=kind==='wrong'?'triangle':'sine';
+        osc.frequency.setValueAtTime(from,at);
+        osc.frequency.exponentialRampToValueAtTime(to,at+duration);
+        gain.gain.setValueAtTime(.0001,at);
+        gain.gain.exponentialRampToValueAtTime(volume,at+.012);
+        gain.gain.exponentialRampToValueAtTime(.0001,at+duration);
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.start(at);osc.stop(at+duration+.012);
+        offset+=duration*.72;
+      }
+    }catch{}
+  }
+  function gameCellFeedback(i,kind){
+    const el=$('board').children[i];
+    if(!el)return;
+    const cls=kind==='cat'?'cat-placed':'cell-undo-pop';
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+    setTimeout(()=>el.classList.remove(cls),360);
+  }
   function setCell(i,value,check=true){
     if(stageFailed||clearPending||mistakes>=3||isFixed(i))return;
     const previous=cells[i];
@@ -170,6 +212,7 @@
       persist();
       updateHearts();
       showWrongMove(i);
+      gameTone('wrong');
       $('caption').textContent=mistakes>=3?'틀렸어! 기회가 모두 끝났어.':`틀렸어! 빨간 X · 남은 기회 ${3-mistakes}번`;
       showToast(mistakes>=3?'틀렸어! 마지막 기회를 사용했어':`틀렸어! 남은 기회 ${3-mistakes}번`);
       if(mistakes>=3)setTimeout(()=>{if(!stageFailed)failStage()},900);
@@ -180,6 +223,7 @@
     cells[i]=value;
     drawCell(i);
     if(value===1||previous===1)animateXMark(i,value===1);
+    if(value===2){gameCellFeedback(i,'cat');gameTone('cat')}
     saveBoard();
     if(check)validate();
   }
@@ -195,7 +239,7 @@
     bad.forEach(i=>$('board').children[i].classList.add('error'));if(bad.size){showToast('이 배치로는 답이 안 맞아. 빨간 칸을 다시 확인해봐');$('caption').textContent='정답이 아니거나 규칙이 겹친 칸을 살펴봐';return}
     if(placed.length===puzzle.n&&validPlacement(placed))finish()}
   function celebrate(){document.querySelectorAll('.cell.cat').forEach((el,i)=>{el.classList.remove('celebrate-cat');el.style.setProperty('--celebrate-delay',`${i*45}ms`);void el.offsetWidth;el.classList.add('celebrate-cat')});const layer=document.createElement('div');layer.className='confetti-layer';layer.setAttribute('aria-hidden','true');const palette=['#f3be4f','#eaa7c6','#67b3db','#a9d48e','#b4a6df','#fff'];for(let i=0;i<70;i++){const piece=document.createElement('i');piece.style.setProperty('--x',`${Math.random()*100}vw`);piece.style.setProperty('--delay',`${Math.random()*220}ms`);piece.style.setProperty('--duration',`${1.4+Math.random()*.9}s`);piece.style.setProperty('--spin',`${Math.floor(Math.random()*900-450)}deg`);piece.style.setProperty('--piece-color',palette[i%palette.length]);layer.appendChild(piece)}document.body.appendChild(layer);setTimeout(()=>layer.remove(),3500);$('modal').classList.add('celebration-modal');setTimeout(()=>$('modal').classList.remove('celebration-modal'),900)}
-  function finish(){if(!clearPending){clearPending=true;clearBoard();const wasDaily=gameMode==='daily',alreadyWon=wasDaily&&save.dailyResults[dailyDateKey]?.completed;if(!wasDaily)save.solved++;else if(!alreadyWon){save.dailyWins=(save.dailyWins||0)+1;save.dailyResults[dailyDateKey]={completed:true,mistakes};save.dailyProgress[dailyDateKey]={mistakes,completed:true}}const coinReward=(!wasDaily||!alreadyWon)?puzzle.n*10:0;if(coinReward)recordMissionWin(wasDaily,!alreadyWon,mistakes===0);if(coinReward){save.score+=puzzle.n*100;save.coins+=coinReward}persist();$('score').textContent=save.score;$('hints').textContent=save.hints;updateCoins();$('caption').textContent=wasDaily?'챌린지를 완료했다냥!':'완벽하다냥!';$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modalTitle').textContent=wasDaily?'챌린지 완료다냥!':'참 잘했다냥!';$('modalText').textContent=wasDaily?`${dateLabel(dailyDateKey)} 완료! 🐟 ${coinReward}코인을 얻었다냥!`:`레벨 ${save.level} 클리어! 🐟 ${coinReward}코인을 얻었다냥!`;$('modalButton').textContent=wasDaily?'달력으로':'다음 레벨 →';celebrate();clearTimer=setTimeout(()=>{$('modal').classList.remove('hidden');$('modal').classList.add('reward-pop');setTimeout(()=>$('modal').classList.remove('reward-pop'),850)},1000)}}
+  function finish(){if(!clearPending){clearPending=true;gameTone('win');clearBoard();const wasDaily=gameMode==='daily',alreadyWon=wasDaily&&save.dailyResults[dailyDateKey]?.completed;if(!wasDaily)save.solved++;else if(!alreadyWon){save.dailyWins=(save.dailyWins||0)+1;save.dailyResults[dailyDateKey]={completed:true,mistakes};save.dailyProgress[dailyDateKey]={mistakes,completed:true}}const coinReward=(!wasDaily||!alreadyWon)?puzzle.n*10:0;if(coinReward)recordMissionWin(wasDaily,!alreadyWon,mistakes===0);if(coinReward){save.score+=puzzle.n*100;save.coins+=coinReward}persist();$('score').textContent=save.score;$('hints').textContent=save.hints;updateCoins();$('caption').textContent=wasDaily?'챌린지를 완료했다냥!':'완벽하다냥!';$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modalTitle').textContent=wasDaily?'챌린지 완료다냥!':'참 잘했다냥!';$('modalText').textContent=wasDaily?`${dateLabel(dailyDateKey)} 완료! 🐟 ${coinReward}코인을 얻었다냥!`:`레벨 ${save.level} 클리어! 🐟 ${coinReward}코인을 얻었다냥!`;$('modalButton').textContent=wasDaily?'달력으로':'다음 레벨 →';celebrate();clearTimer=setTimeout(()=>{$('modal').classList.remove('hidden');$('modal').classList.add('reward-pop');setTimeout(()=>$('modal').classList.remove('reward-pop'),850)},1000)}}
   function showToast(msg){const el=$('toast');el.textContent=msg.endsWith('냥!')?msg:msg.replace(/[.! ]+$/,'')+'다냥!';el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),1900)}
   let milestoneAdPending=false;
   function advanceStage(){milestoneAdPending=false;clearPending=false;clearBoard();save.level++;persist();$('modal').classList.add('hidden');render()}
@@ -236,12 +280,13 @@
   function showShop(){updateCoins();renderCatAppearance();$('shopModal').classList.remove('hidden');renderCatShop();updateShop();selectShopTab(shopTab);window.NyangdokuAds?.isAdFree?.()}
   function rewardHints(){if(rewardBusy)return;if(adFree){if(save.freeHintClaimed?.[rewardKey()]){showToast('이번 판 무료 힌트는 이미 받았어');return}save.freeHintClaimed ||= {};save.freeHintClaimed[rewardKey()]=true;save.hints+=2;persist();$('hints').textContent=save.hints;showToast('무료 힌트 2개 획득!');return}if(!window.NyangdokuAds?.showRewardedAd){showToast('Android 앱에서 이용할 수 있어');return}rewardBusy=true;window.NyangdokuAds.showRewardedAd('hint')}
   function getHint(){if(stageFailed||clearPending)return;const options=puzzle.cats.map(([r,c])=>r*puzzle.n+c).filter(i=>cells[i]!==2);if(!options.length){showToast('이미 모든 고양이를 찾았다냥!');return}if(save.hints>0){save.hints--;persist();$('hints').textContent=save.hints;revealHint();return}showToast('힌트가 없다냥! 상점에서 광고를 보고 충전하라냥!');showShop()}
-  function revealHint(){const options=puzzle.cats.map(([r,c])=>r*puzzle.n+c).filter(i=>cells[i]!==2);if(!options.length){showToast('모든 고양이를 이미 찾았어!');return}const i=options[0];setCell(i,2);$('board').children[i]?.classList.add('hint-glow');setTimeout(()=>$('board').children[i]?.classList.remove('hint-glow'),1400);$('caption').textContent='빛나는 칸에 힌트 고양이가 나타났다냥!';showToast('힌트 고양이 발견!')}
+  function revealHint(){const options=puzzle.cats.map(([r,c])=>r*puzzle.n+c).filter(i=>cells[i]!==2);if(!options.length){showToast('모든 고양이를 이미 찾았어!');return}const i=options[0];setCell(i,2);gameTone('hint');$('board').children[i]?.classList.add('hint-glow');setTimeout(()=>$('board').children[i]?.classList.remove('hint-glow'),1400);$('caption').textContent='빛나는 칸에 힌트 고양이가 나타났다냥!';showToast('힌트 고양이 발견!')}
   window.onRewardedAd=kind=>{rewardBusy=false;if(kind==='hint'){save.hints+=2;persist();$('hints').textContent=save.hints;showToast('힌트 2개 획득!')}else if(kind==='double'){save.score+=puzzle.n*100;persist();$('score').textContent=save.score;showToast('점수 두 배 보상을 받았어!')}};
   window.onAdUnavailable=()=>{rewardBusy=false;showToast('광고가 아직 준비되지 않았어. 잠시 후 다시 눌러줘')};
   $('missionBtn').addEventListener('click',openMissions);$('missionCloseX').addEventListener('click',()=> $('missionModal').classList.add('hidden'));$('attendanceClaim').addEventListener('click',claimAttendance);$('dailyMissionTab').addEventListener('click',()=>{missionTab='daily';renderMissions()});$('weeklyMissionTab').addEventListener('click',()=>{missionTab='weekly';renderMissions()});for(const [tab,suffix] of Object.entries({cats:'Cats',extras:'Extras'}))$('shopTab'+suffix).addEventListener('click',()=>selectShopTab(tab));$('shopBtn').addEventListener('click',showShop);const closeShop=()=> $('shopModal').classList.add('hidden');$('closeShopBtn').addEventListener('click',closeShop);$('shopCloseX').addEventListener('click',closeShop);$('purchaseAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.buyRemoveAds?.());$('restoreAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.restorePurchases?.());$('rewardHintBtn').addEventListener('click',rewardHints);window.NyangdokuAds?.isAdFree?.();
-  $('hintBtn').addEventListener('click',getHint);$('undoBtn').addEventListener('click',()=>{if(stageFailed||clearPending)return;const move=undoHistory.pop();if(!move){showToast('되돌릴 기록이 없다냥!');return}cells[move.i]=move.previous;drawCell(move.i);saveBoard();validate();$('caption').textContent='마지막 입력을 되돌렸다냥!'});$('modalButton').addEventListener('click',advanceModal);$('gameCloseX').addEventListener('click',()=>{if(tutorialStep>=0){tutorialStep=-1;save.tutorialDone=true;persist();$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modal').classList.add('hidden');return}advanceModal()});$('settingsBtn').addEventListener('click',()=>showToast('진행 상황은 이 기기에 자동 저장돼'));
+  $('hintBtn').addEventListener('click',getHint);$('undoBtn').addEventListener('click',()=>{if(stageFailed||clearPending)return;const move=undoHistory.pop();if(!move){showToast('되돌릴 기록이 없다냥!');return}cells[move.i]=move.previous;drawCell(move.i);gameCellFeedback(move.i,'undo');gameTone('undo');saveBoard();validate();$('caption').textContent='마지막 입력을 되돌렸다냥!'});$('modalButton').addEventListener('click',advanceModal);$('gameCloseX').addEventListener('click',()=>{if(tutorialStep>=0){tutorialStep=-1;save.tutorialDone=true;persist();$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modal').classList.add('hidden');return}advanceModal()});$('settingsBtn').addEventListener('click',()=>showToast('진행 상황은 이 기기에 자동 저장돼'));
   $('dailyBtn').addEventListener('click',openDailyCalendar);$('dailyBack').addEventListener('click',leaveCalendar);$('dailyContinue').addEventListener('click',startDaily);$('dailyInfo').addEventListener('click',dailyInfo);$('monthlyTrophyBtn').addEventListener('click',dailyInfo);$('prevMonth').addEventListener('click',()=>shiftMonth(-1));$('nextMonth').addEventListener('click',()=>shiftMonth(1));
   const boardElement=$('board');boardElement.addEventListener('pointerdown',boardPointerDown);boardElement.addEventListener('pointermove',boardPointerMove);boardElement.addEventListener('pointerup',boardPointerUp);boardElement.addEventListener('pointercancel',()=>{pointerPath=null});
+  const studioSplash=$('studioSplash');if(studioSplash){setTimeout(()=>{studioSplash.classList.add('studio-splash-out');setTimeout(()=>studioSplash.remove(),650)},1350)}
   applyBackground();window.addEventListener('resize',()=>{const board=$('board');if(board.clientWidth)board.style.height=`${board.clientWidth}px`});render();
 })();
