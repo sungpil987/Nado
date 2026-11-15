@@ -1,5 +1,5 @@
 (() => {
-  const $ = id => document.getElementById(id), colors = 9, saveKey = 'nyangdoku-save-v1';
+  const $ = id => document.getElementById(id), colors = 12, saveKey = 'nyangdoku-save-v1';
   let save = loadSave(), puzzle, cells = [], toastTimer, tutorialStep = -1, lastTap = null, pointerPath = null, mistakes = 0, stageFailed = false, clearPending = false, clearTimer = null, undoHistory = [];
   const levelBands=[{start:1,end:10,size:4},{start:11,end:25,size:5},{start:26,end:45,size:6},{start:46,end:70,size:7},{start:71,end:100,size:8},{start:101,end:140,size:9},{start:141,end:185,size:10},{start:186,end:235,size:11},{start:236,end:Infinity,size:12}];
   const levelBand = level => levelBands.find(b=>level>=b.start&&level<=b.end)||levelBands[levelBands.length-1];
