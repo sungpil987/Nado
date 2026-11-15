@@ -125,6 +125,36 @@
     cell.classList.add('mistake-flash');
     setTimeout(()=>{mark.remove();cell.classList.remove('mistake-flash')},950);
   }
+  let xAudioContext=null,lastXSoundAt=0;
+  function playXSound(){
+    const now=performance.now();
+    if(now-lastXSoundAt<75)return;
+    lastXSoundAt=now;
+    try{
+      const AudioContextType=window.AudioContext||window.webkitAudioContext;
+      if(!AudioContextType)return;
+      if(!xAudioContext)xAudioContext=new AudioContextType();
+      if(xAudioContext.state==='suspended')xAudioContext.resume().catch(()=>{});
+      const t=xAudioContext.currentTime,osc=xAudioContext.createOscillator(),gain=xAudioContext.createGain();
+      osc.type='sine';
+      osc.frequency.setValueAtTime(620,t);
+      osc.frequency.exponentialRampToValueAtTime(410,t+.055);
+      gain.gain.setValueAtTime(.0001,t);
+      gain.gain.exponentialRampToValueAtTime(.045,t+.008);
+      gain.gain.exponentialRampToValueAtTime(.0001,t+.075);
+      osc.connect(gain);gain.connect(xAudioContext.destination);
+      osc.start(t);osc.stop(t+.08);
+    }catch{}
+  }
+  function animateXMark(i,added){
+    const cell=$('board').children[i];
+    if(!cell)return;
+    cell.classList.remove('x-mark-pop','x-mark-clear');
+    void cell.offsetWidth;
+    cell.classList.add(added?'x-mark-pop':'x-mark-clear');
+    setTimeout(()=>cell.classList.remove('x-mark-pop','x-mark-clear'),190);
+    if(added)playXSound();
+  }
   function setCell(i,value,check=true){
     if(stageFailed||clearPending||mistakes>=3||isFixed(i))return;
     const previous=cells[i];
@@ -149,6 +179,7 @@
     if(undoHistory.length>150)undoHistory.shift();
     cells[i]=value;
     drawCell(i);
+    if(value===1||previous===1)animateXMark(i,value===1);
     saveBoard();
     if(check)validate();
   }
