@@ -83,7 +83,47 @@
   function isFixed(i){return puzzle.fixedCats.some(([r,c])=>r*puzzle.n+c===i)}
   function activateCell(i){if(stageFailed)return;if(isFixed(i)){showToast('이 고양이는 퍼즐에 있는 힌트야');return}const now=Date.now();if(lastTap&&lastTap.i===i&&now-lastTap.time<360){lastTap=null;setCell(i,2);return}lastTap={i,time:now};setCell(i,cells[i]===1?0:1)}
   function paintCross(i){if(i<0||isFixed(i)||cells[i]===2||cells[i]===1)return;setCell(i,1,false)}
-  function setCell(i,value,check=true){if(stageFailed||clearPending||isFixed(i))return;const previous=cells[i];if(value===2&&previous===2)value=0;if(previous===value)return;undoHistory.push({i,previous,value});if(undoHistory.length>150)undoHistory.shift();cells[i]=value;drawCell(i);saveBoard();if(check)validate();if(value===2&&previous!==2&&puzzle.solution[Math.floor(i/puzzle.n)]!==i%puzzle.n){mistakes++;if(gameMode==='daily'){save.dailyProgress[dailyDateKey]={mistakes};save.dailyResults[dailyDateKey]={completed:false,mistakes}}else save.stageMistakes[save.level]=mistakes;persist();updateHearts();if(mistakes>=3)failStage();else{const cell=$('board').children[i];cell.classList.add('mistake-flash');setTimeout(()=>cell.classList.remove('mistake-flash'),800);$('caption').textContent=`틀린 고양이다냥! 남은 기회 ${3-mistakes}번`;showToast(`실수했다냥! 남은 기회 ${3-mistakes}번`)}}}
+  function showWrongMove(i){
+    const cell=$('board').children[i];
+    if(!cell)return;
+    cell.classList.remove('mistake-flash');
+    cell.querySelectorAll('.wrong-x').forEach(x=>x.remove());
+    const mark=document.createElement('span');
+    mark.className='wrong-x';
+    mark.textContent='✕';
+    mark.setAttribute('aria-hidden','true');
+    cell.appendChild(mark);
+    void cell.offsetWidth;
+    cell.classList.add('mistake-flash');
+    setTimeout(()=>{mark.remove();cell.classList.remove('mistake-flash')},950);
+  }
+  function setCell(i,value,check=true){
+    if(stageFailed||clearPending||isFixed(i))return;
+    const previous=cells[i];
+    if(value===2&&previous===2)value=0;
+    if(previous===value)return;
+    const wrongCat=value===2&&puzzle.solution[Math.floor(i/puzzle.n)]!==i%puzzle.n;
+    if(wrongCat){
+      mistakes++;
+      if(gameMode==='daily'){
+        save.dailyProgress[dailyDateKey]={mistakes};
+        save.dailyResults[dailyDateKey]={completed:false,mistakes};
+      }else save.stageMistakes[save.level]=mistakes;
+      persist();
+      updateHearts();
+      showWrongMove(i);
+      $('caption').textContent=mistakes>=3?'틀렸어! 기회가 모두 끝났어.':`틀렸어! 빨간 X · 남은 기회 ${3-mistakes}번`;
+      showToast(mistakes>=3?'틀렸어! 마지막 기회를 사용했어':`틀렸어! 남은 기회 ${3-mistakes}번`);
+      if(mistakes>=3)setTimeout(()=>{if(!stageFailed)failStage()},900);
+      return;
+    }
+    undoHistory.push({i,previous,value});
+    if(undoHistory.length>150)undoHistory.shift();
+    cells[i]=value;
+    drawCell(i);
+    saveBoard();
+    if(check)validate();
+  }
   function updateHearts(){$('hearts').classList.remove('heart-pulse');void $('hearts').offsetWidth;$('hearts').classList.add('heart-pulse');$('hearts').textContent='♥ '.repeat(Math.max(0,3-mistakes))+'♡ '.repeat(Math.min(3,mistakes)).trim();$('hearts').setAttribute('aria-label',`남은 실수 기회 ${Math.max(0,3-mistakes)}회`)}
   function failStage(){stageFailed=true;if(gameMode==='daily')save.dailyResults[dailyDateKey]={completed:false,mistakes,failed:true};$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modalTitle').textContent='기회가 끝났다냥!';$('modalText').textContent='세 번 실수했다냥. 같은 퍼즐에 다시 도전하라냥!';$('modalButton').textContent='다시 도전하냥';persist();$('modal').classList.remove('hidden')}
   function restartStage(){clearTimeout(clearTimer);clearPending=false;clearBoard();undoHistory=[];if(gameMode==='daily'){save.dailyProgress[dailyDateKey]={mistakes:0};delete save.dailyResults[dailyDateKey]}else save.stageMistakes[save.level]=0;persist();$('modal').classList.add('hidden');render();showToast('같은 퍼즐을 다시 시작했어')}
