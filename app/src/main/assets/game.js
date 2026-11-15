@@ -4,7 +4,7 @@
   const levelBands=[{start:1,end:10,size:4},{start:11,end:25,size:5},{start:26,end:45,size:6},{start:46,end:70,size:7},{start:71,end:100,size:8},{start:101,end:140,size:9},{start:141,end:185,size:10},{start:186,end:235,size:11},{start:236,end:Infinity,size:12}];
   const levelBand = level => levelBands.find(b=>level>=b.start&&level<=b.end)||levelBands[levelBands.length-1];
   const levelSize = level => levelBand(level).size;
-  function stageClues(level){if(level===1)return 2;const band=levelBand(level),size=band.size,span=Number.isFinite(band.end)?band.end-band.start+1:50,progress=Math.min(1,(level-band.start)/Math.max(1,span)),base=Math.min(5,Math.max(2,Math.floor((size+1)/2))),drop=progress>=.72?2:progress>=.38?1:0;return Math.max(2,base-drop)}
+  function stageClues(level){if(level===1)return 2;const band=levelBand(level),size=band.size,span=Number.isFinite(band.end)?band.end-band.start+1:50,progress=Math.min(1,(level-band.start)/Math.max(1,span));const base=size<=5?2:size<=8?3:4;return Math.max(1,base-(progress>=.65?2:progress>=.25?1:0))}
   const regionColor = Array.from({length:12},(_,i)=>`region-${i}`);
   let gameMode='stage',dailyDateKey=null,selectedDateKey=seoulTodayKey(),dailyMonthKey=selectedDateKey.slice(0,7);
   function loadSave(){try{const s=Object.assign({level:1,score:0,hints:2,solved:0,stageCache:{},stageAttempts:{},stageMistakes:{},seenStageKeys:[],dailyPuzzles:{},dailyResults:{},dailyProgress:{},dailyWins:0},JSON.parse(localStorage.getItem(saveKey)||'{}'));if(s.puzzleVersion!==6){s.stageCache={};s.stageAttempts={};s.stageMistakes={};s.seenStageKeys=[];s.puzzleVersion=6}s.stageCache ||= {};s.stageAttempts ||= {};s.stageMistakes ||= {};s.seenStageKeys ||= [];s.dailyPuzzles ||= {};s.dailyResults ||= {};s.dailyProgress ||= {};s.boardProgress ||= {};s.missions ||= {daily:{},weekly:{}};s.attendance ||= {claimed:{},streak:0,last:null};return s}catch{return {level:1,score:0,hints:2,solved:0,stageCache:{},stageAttempts:{},stageMistakes:{},seenStageKeys:[],dailyPuzzles:{},dailyResults:{},dailyProgress:{},dailyWins:0,puzzleVersion:6}}}
@@ -80,8 +80,8 @@
     // Keep previously started or completed daily puzzles stable across updates.
     if(cached?.puzzle&&cached.puzzle.n>=9&&cached.puzzle.n<=12&&validPuzzle(cached.puzzle))return cached.puzzle;
     delete save.dailyPuzzles[dateKey];
-    const n=dailySize(dateKey),tier=n-9,clueCount=Math.max(1,n-8);
-    const seedBase=parseInt(stageHash(`${dateKey}|${n}|daily-v6`).slice(0,8),16)>>>0;
+    const n=dailySize(dateKey),tier=n-9,clueCount=n<=10?1:2;
+    const seedBase=parseInt(stageHash(`${dateKey}|${n}|daily-v7-hard`).slice(0,8),16)>>>0;
     const used=new Set(save.seenStageKeys),previous=save.dailyPuzzles[shiftDate(dateKey,-1)]?.puzzle;
     for(let attempt=0;attempt<512;attempt++){
       const seed=(seedBase+Math.imul(attempt+1,0x9E3779B1))>>>0;
@@ -96,7 +96,7 @@
       for(let attempt=0;attempt<512;attempt++){
         const candidate=makeCandidate(n,clues,(seedBase+Math.imul(attempt+1,0x9E3779B1))>>>0);
         if(!candidate)continue;
-        save.dailyPuzzles[dateKey]={puzzle:candidate,tier,key:stageHash(`daily-fallback-v6|${dateKey}|${n}|${clues}|${attempt}`)};
+        save.dailyPuzzles[dateKey]={puzzle:candidate,tier,key:stageHash(`daily-fallback-v7|${dateKey}|${n}|${clues}|${attempt}`)};
         persist();return candidate;
       }
     }
