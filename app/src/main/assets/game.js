@@ -71,10 +71,38 @@
   function seoulTodayKey(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),v={};parts.forEach(p=>{v[p.type]=p.value});return `${v.year}-${v.month}-${v.day}`}
   function shiftDate(key,amount){const [y,m,d]=key.split('-').map(Number),x=new Date(Date.UTC(y,m-1,d+amount));return `${x.getUTCFullYear()}-${String(x.getUTCMonth()+1).padStart(2,'0')}-${String(x.getUTCDate()).padStart(2,'0')}`}
   function dailySkill(){const recent=Object.keys(save.dailyResults).sort().slice(-7).map(k=>save.dailyResults[k]).filter(x=>Number.isFinite(x.mistakes));let tier=Math.min(5,Math.floor((save.solved+(save.dailyWins||0))/3));if(recent.length>=3){const avg=recent.reduce((s,x)=>s+x.mistakes,0)/recent.length,failRate=recent.filter(x=>x.failed).length/recent.length;if(avg<=0.25&&failRate===0)tier++;else if(avg>=2||failRate>=0.34)tier--}return Math.max(0,Math.min(5,tier))}
-  function dailyPuzzle(dateKey){const cached=save.dailyPuzzles[dateKey];if(cached?.puzzle?.n===9&&validPuzzle(cached.puzzle))return cached.puzzle;delete save.dailyPuzzles[dateKey];const tier=5,n=9,clueCount=1,seedBase=parseInt(stageHash(`${dateKey}|${tier}|daily-v5`).slice(0,8),16)>>>0,used=new Set(save.seenStageKeys),previous=save.dailyPuzzles[shiftDate(dateKey,-1)]?.puzzle;
-    for(let attempt=0;attempt<512;attempt++){const seed=(seedBase+Math.imul(attempt+1,0x9E3779B1))>>>0,candidate=makeCandidate(n,clueCount,seed);if(!candidate||sameSolution(candidate,previous))continue;const key=stageHash(`daily|${n}|${candidate.solution.join('')}|${candidate.regions.join('')}|${candidate.fixedCats.map(([r,c])=>r*n+c).join('.')}`);if(used.has(key))continue;save.dailyPuzzles[dateKey]={puzzle:candidate,tier,key};save.seenStageKeys.push(key);persist();return candidate}
-    let fallback=null;for(let clues=2;clues<=n&&!fallback;clues++)for(let attempt=0;attempt<512&&!fallback;attempt++)fallback=makeCandidate(n,clues,(seedBase+Math.imul(attempt+1,0x9E3779B1))>>>0);if(!fallback)throw new Error('데일리 퍼즐 생성에 실패했다냥!');save.dailyPuzzles[dateKey]={puzzle:fallback,tier,key:stageHash(`daily-fallback|${dateKey}`)};persist();return fallback}
-  function render(){clearTimeout(clearTimer);clearPending=false;const isDaily=gameMode==='daily';puzzle=isDaily?dailyPuzzle(dailyDateKey):makePuzzle(save.level);cells=Array.from({length:puzzle.n*puzzle.n},()=>0);mistakes=isDaily?(save.dailyProgress[dailyDateKey]?.mistakes||0):(save.stageMistakes[save.level]||0);stageFailed=false;$('screenHeading').textContent=isDaily?'데일리 챌린지':`레벨 ${save.level}`;$('score').textContent=save.score;$('hints').textContent=save.hints;$('levelInfo').textContent=isDaily?`${dateLabel(dailyDateKey)} · ${puzzle.n} × ${puzzle.n} · 냥고수`:`${puzzle.n} × ${puzzle.n} · 힌트 고양이 ${puzzle.fixedCats.length}마리`;updateHearts();
+  function dailySize(dateKey){
+    const seed=parseInt(stageHash(`daily-size-v6|${dateKey}`).slice(0,8),16)>>>0;
+    return 9+(seed%4);
+  }
+  function dailyPuzzle(dateKey){
+    const cached=save.dailyPuzzles[dateKey];
+    // Keep previously started or completed daily puzzles stable across updates.
+    if(cached?.puzzle&&cached.puzzle.n>=9&&cached.puzzle.n<=12&&validPuzzle(cached.puzzle))return cached.puzzle;
+    delete save.dailyPuzzles[dateKey];
+    const n=dailySize(dateKey),tier=n-9,clueCount=Math.max(1,n-8);
+    const seedBase=parseInt(stageHash(`${dateKey}|${n}|daily-v6`).slice(0,8),16)>>>0;
+    const used=new Set(save.seenStageKeys),previous=save.dailyPuzzles[shiftDate(dateKey,-1)]?.puzzle;
+    for(let attempt=0;attempt<512;attempt++){
+      const seed=(seedBase+Math.imul(attempt+1,0x9E3779B1))>>>0;
+      const candidate=makeCandidate(n,clueCount,seed);
+      if(!candidate||sameSolution(candidate,previous))continue;
+      const key=stageHash(`daily|${n}|${candidate.solution.join('')}|${candidate.regions.join('')}|${candidate.fixedCats.map(([r,c])=>r*n+c).join('.')}`);
+      if(used.has(key))continue;
+      save.dailyPuzzles[dateKey]={puzzle:candidate,tier,key};
+      save.seenStageKeys.push(key);persist();return candidate;
+    }
+    for(let clues=clueCount+1;clues<=n;clues++){
+      for(let attempt=0;attempt<512;attempt++){
+        const candidate=makeCandidate(n,clues,(seedBase+Math.imul(attempt+1,0x9E3779B1))>>>0);
+        if(!candidate)continue;
+        save.dailyPuzzles[dateKey]={puzzle:candidate,tier,key:stageHash(`daily-fallback-v6|${dateKey}|${n}|${clues}|${attempt}`)};
+        persist();return candidate;
+      }
+    }
+    throw new Error('데일리 퍼즐 생성에 실패했다냥!');
+  }
+  function render(){clearTimeout(clearTimer);clearPending=false;const isDaily=gameMode==='daily';puzzle=isDaily?dailyPuzzle(dailyDateKey):makePuzzle(save.level);cells=Array.from({length:puzzle.n*puzzle.n},()=>0);mistakes=isDaily?(save.dailyProgress[dailyDateKey]?.mistakes||0):(save.stageMistakes[save.level]||0);stageFailed=false;$('screenHeading').textContent=isDaily?'데일리 챌린지':`레벨 ${save.level}`;$('score').textContent=save.score;$('hints').textContent=save.hints;$('levelInfo').textContent=isDaily?`${dateLabel(dailyDateKey)} · ${puzzle.n} × ${puzzle.n} · 데일리 챌린지`:`${puzzle.n} × ${puzzle.n} · 힌트 고양이 ${puzzle.fixedCats.length}마리`;updateHearts();
     const board=$('board');board.innerHTML='';board.style.gridTemplateColumns=`repeat(${puzzle.n},minmax(0,1fr))`;board.style.gridTemplateRows=`repeat(${puzzle.n},minmax(0,1fr))`;board.style.gap=puzzle.n>=8?'3px':'5px';
     for(let i=0;i<puzzle.n*puzzle.n;i++){const r=Math.floor(i/puzzle.n),c=i%puzzle.n,el=document.createElement('button');el.className=`cell ${regionColor[puzzle.regions[i]%colors]}`;el.setAttribute('role','gridcell');el.setAttribute('aria-label',`행 ${r+1}, 열 ${c+1}`);el.dataset.i=i;board.appendChild(el)}
     puzzle.fixedCats.forEach(([r,c])=>{const i=r*puzzle.n+c;cells[i]=2;drawCell(i);$('board').children[i].classList.add('locked');$('board').children[i].setAttribute('aria-label',`행 ${r+1}, 열 ${c+1}, 고정 힌트 고양이`)});
@@ -147,7 +175,7 @@
   function monthLength(y,m){return new Date(y,m,0).getDate()}
   function renderDailyCalendar(){const [y,m]=dailyMonthKey.split('-').map(Number),today=seoulTodayKey(),days=monthLength(y,m),first=new Date(y,m-1,1).getDay(),grid=$('calendarGrid');$('dailyYear').textContent=y;$('dailyMonthTitle').textContent=`${m}월`;grid.innerHTML='';const completed=Object.keys(save.dailyResults).filter(k=>k.startsWith(dailyMonthKey+'-')&&save.dailyResults[k]?.completed).length,goals=[10,20,days];$('monthlyCount').textContent=`${completed}/${days}`;$('trophyFill').style.width=`${Math.min(100,completed/days*100)}%`;document.querySelectorAll('.milestone').forEach((el,i)=>{el.querySelector('b').textContent=goals[i];el.classList.toggle('earned',completed>=goals[i])});$('nextMonth').disabled=dailyMonthKey>=today.slice(0,7);
     for(let i=0;i<first;i++){const blank=document.createElement('span');blank.className='calendar-blank';grid.appendChild(blank)}for(let day=1;day<=days;day++){const key=`${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`,button=document.createElement('button');button.className='calendar-day';button.textContent=day;button.disabled=key>today;button.setAttribute('aria-label',`${y}년 ${m}월 ${day}일${save.dailyResults[key]?.completed?' 완료':''}`);if(key===selectedDateKey)button.classList.add('selected');if(save.dailyResults[key]?.completed)button.classList.add('completed');if(key>today)button.classList.add('future');button.addEventListener('click',()=>{selectedDateKey=key;renderDailyCalendar()});grid.appendChild(button)}
-    $('dailySelectedLabel').textContent=`${Number(selectedDateKey.slice(5,7))}/${Number(selectedDateKey.slice(8,10))}/${selectedDateKey.slice(2,4)}`;$('dailyDifficulty').textContent='도전 난이도 · 냥고수 · 9×9';$('dailyContinue').disabled=selectedDateKey>today;$('dailyContinue').textContent=save.dailyResults[selectedDateKey]?.completed?'다시 도전':'계속하기';}
+    $('dailySelectedLabel').textContent=`${Number(selectedDateKey.slice(5,7))}/${Number(selectedDateKey.slice(8,10))}/${selectedDateKey.slice(2,4)}`;$('dailyDifficulty').textContent=`오늘의 도전 · ${save.dailyPuzzles[selectedDateKey]?.puzzle?.n||dailySize(selectedDateKey)}×${save.dailyPuzzles[selectedDateKey]?.puzzle?.n||dailySize(selectedDateKey)}`;$('dailyContinue').disabled=selectedDateKey>today;$('dailyContinue').textContent=save.dailyResults[selectedDateKey]?.completed?'다시 도전':'계속하기';}
   function openDailyCalendar(){const today=seoulTodayKey();if(selectedDateKey>today)selectedDateKey=today;if(dailyMonthKey>today.slice(0,7))dailyMonthKey=today.slice(0,7);$('dailyScreen').classList.remove('hidden');renderDailyCalendar()}
   function leaveCalendar(){ $('dailyScreen').classList.add('hidden');gameMode='stage';dailyDateKey=null;render() }
   function goDailyCalendar(){ $('modal').classList.add('hidden');gameMode='stage';dailyDateKey=null;openDailyCalendar();render() }
