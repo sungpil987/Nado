@@ -260,3 +260,39 @@ body.dark-mode .calendar-day:not(.selected):not(.completed):not(.future){color:#
 body.dark-mode .calendar-day.future{color:#677487!important}
 body.dark-mode .daily-start-panel{background:#263449!important}
 body.dark-mode .daily-start-panel #dailySelectedLabel,body.dark-mode .daily-start-panel .daily-difficulty{color:#e7f0ff!important}
+
+/* Cat collection gacha v1.2 */
+.gacha-panel{padding:17px 14px;margin-bottom:18px;border-radius:18px;background:linear-gradient(145deg,#fff5df,#fbe8ee);border:1px solid #f0d9c6;text-align:center}
+.gacha-title{font:22px Jua,sans-serif;color:#644e4a}
+.gacha-desc{font-size:12px;color:#927d79;line-height:1.55;margin:7px 0 12px}
+.gacha-rates{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin:10px 0 14px}
+.gacha-rate{font:12px Jua,sans-serif;border-radius:99px;padding:6px 10px;background:#fff;color:#806b67}
+.gacha-rate.rarity-rare{color:#3777c2}
+.gacha-rate.rarity-epic{color:#9559b8}
+.gacha-rate.rarity-legendary{color:#bd7c13}
+.gacha-pull{width:100%;padding:13px 10px;border:0;border-radius:13px;background:linear-gradient(110deg,#f0b849,#e89935);color:#fff;font:19px Jua,sans-serif;box-shadow:0 5px 0 #c98530}
+.gacha-pull:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 #c98530}
+.gacha-pull:disabled{opacity:.55;box-shadow:none}
+.gacha-footnote{font-size:11px;color:#9e847e;line-height:1.6;margin:12px 0 0}
+.gacha-result{display:flex;align-items:center;gap:14px;margin-top:14px;padding:12px;background:#ffffffd9;border:1px solid #f0d5a6;border-radius:14px;text-align:left}
+.gacha-result.hidden{display:none!important}
+.gacha-result img{width:72px;height:72px;object-fit:contain}
+.gacha-result div{flex:1;min-width:0}
+.gacha-result small{display:block;color:#b28a3e;font-size:11px}
+.gacha-result strong{display:block;font:20px Jua,sans-serif;color:#654e4a;margin:4px 0}
+.gacha-result p{font-size:12px;color:#92715c;margin:0}
+.gacha-reveal{animation:gachaPop .42s cubic-bezier(.2,1.5,.4,1)}
+@keyframes gachaPop{from{opacity:0;transform:scale(.8) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.collection-heading{display:flex;align-items:center;justify-content:space-between;font:18px Jua,sans-serif;margin:10px 2px 12px}
+.collection-heading span{font-size:14px;color:#a68c81}
+.cat-product.cat-locked img{filter:grayscale(1);opacity:.3}
+.cat-product.cat-locked button{opacity:.55}
+body.dark-mode .gacha-panel{background:linear-gradient(145deg,#353449,#443447);border-color:#625169}
+body.dark-mode .gacha-title,body.dark-mode .gacha-result strong,body.dark-mode .collection-heading{color:#f5f0ff}
+body.dark-mode .gacha-desc,body.dark-mode .gacha-footnote{color:#d7c9db}
+body.dark-mode .gacha-rate{background:#2c3548;color:#f0e7f7}
+body.dark-mode .gacha-result{background:#29374a;border-color:#65567b}
+body.dark-mode .gacha-result p{color:#e1c9a4}
+body.dark-mode .shop-v2 .shop-scroll,body.dark-mode .shop-v2 .shop-bottom{background:#222c3a!important;color:#f0f5ff}
+body.dark-mode .shop-v2 .cat-product{background:#303d50!important;color:#f0f5ff}
+body.reduced-effects .gacha-reveal{animation:none!important}
