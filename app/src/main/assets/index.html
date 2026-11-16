@@ -29,6 +29,21 @@
       
     </section>
     <footer><span id="levelInfo">4 × 4 · 고양이 4마리</span></footer>
+    <div class="gacha-cinematic hidden" id="gachaCinematic" role="dialog" aria-modal="true" aria-label="고양이 뽑기 결과">
+      <div class="gacha-cinematic-glow"></div>
+      <div class="gacha-cinematic-content">
+        <p id="gachaStageText" class="gacha-stage-text">새로운 냥이를 부르는 중...</p>
+        <div class="gacha-capsule" id="gachaCapsule"><span>🐾</span></div>
+        <div class="gacha-prize hidden" id="gachaPrize">
+          <div class="gacha-prize-burst">✦ ✧ ✦</div>
+          <img id="gachaPrizeImage" src="cat.png" alt="뽑은 고양이">
+          <div class="gacha-prize-rarity" id="gachaPrizeRarity"></div>
+          <h2 id="gachaPrizeName"></h2>
+          <p id="gachaPrizeMessage"></p>
+        </div>
+        <button type="button" class="gacha-cinematic-button" id="gachaCinematicButton">건너뛰기</button>
+      </div>
+    </div>
     <div class="modal hidden" id="settingsModal"><div class="dialog settings-dialog"><button type="button" class="modal-close" id="settingsClose" aria-label="설정 닫기">×</button><h2>⚙ 환경설정</h2><p class="settings-subtitle">플레이 스타일을 내 마음대로</p>
       <div class="settings-section">사운드 및 피드백</div>
       <label class="settings-row"><span>🔊 <b>효과음</b><small>X, 고양이, 클리어 소리</small></span><input type="checkbox" id="settingSound" checked></label>
