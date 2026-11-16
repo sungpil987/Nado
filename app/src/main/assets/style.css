@@ -323,3 +323,40 @@ body.reduced-effects .gacha-reveal{animation:none!important}
 @keyframes gachaPrizeAppear{from{opacity:0;transform:scale(.45) translateY(70px);filter:brightness(2)}to{opacity:1;transform:scale(1) translateY(0);filter:brightness(1)}}
 @keyframes gachaSparkle{50%{opacity:.45;transform:scale(1.15)}}
 body.reduced-effects .gacha-cinematic *,body.reduced-effects .gacha-cinematic-glow{animation:none!important;transition:none!important}
+
+/* v1.2.4: rarity encyclopedia */
+.dex-overview{padding:15px;border-radius:15px;background:#f7f3fb;text-align:center}
+.dex-overview h3{font:23px Jua,sans-serif;margin:0 0 5px;color:#4d4664}
+.dex-overview p{font-size:12px;color:#817d8f;margin:0 0 9px}
+.dex-total{font:15px Jua,sans-serif;color:#6b5898}
+.dex-filters{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+.shop-v2 .dex-filter{margin:0;padding:8px 11px;border-radius:99px;background:#f2f1f5;color:#635d6d;font:12px Jua,sans-serif;border:1px solid #ddd9e4}
+.shop-v2 .dex-filter.active{background:#3f506f;color:#fff;border-color:#3f506f}
+.shop-v2 .dex-filter.rarity-epic.active{background:#8255bf;border-color:#8255bf}
+.shop-v2 .dex-filter.rarity-legendary.active{background:#b58a29;border-color:#b58a29}
+.shop-v2 .dex-filter.rarity-rare.active{background:#397ac4;border-color:#397ac4}
+.dex-section-heading{font:17px Jua,sans-serif;margin:8px 0 12px}
+.dex-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.dex-card{display:flex;align-items:center;flex-direction:column;min-width:0;gap:4px;border:1px solid #e3e1e8;border-radius:13px;background:#fafafa;padding:10px 5px;text-align:center}
+.dex-card.rarity-rare{border-color:#91b7e8;background:#f0f7ff}
+.dex-card.rarity-epic{border-color:#c6a6e7;background:#f8f1ff}
+.dex-card.rarity-legendary{border-color:#e9c779;background:#fff9e9}
+.dex-card img{width:100%;height:85px;object-fit:contain}
+.dex-card.locked img{filter:brightness(0);opacity:.2}
+.dex-card strong{font:12px Jua,sans-serif;overflow-wrap:anywhere}
+.dex-card small{font-size:10px;color:#8a8791}
+.dex-rarity{font:10px Jua,sans-serif;color:#74717c}
+.dex-card.rarity-rare .dex-rarity{color:#347fc5}
+.dex-card.rarity-epic .dex-rarity{color:#9654c6}
+.dex-card.rarity-legendary .dex-rarity{color:#b17d17}
+.shop-v2 .dex-card button{font:11px Jua,sans-serif;margin:4px 0 0;padding:7px 9px;border:0;border-radius:9px;background:#e5e9f4;color:#354e78}
+.dex-empty{grid-column:1/-1;text-align:center;padding:30px 5px;color:#888}
+.dex-help{text-align:center;font-size:11px;color:#918c99;margin:16px 0 5px}
+body.dark-mode .dex-overview{background:#30374a}
+body.dark-mode .dex-overview h3,body.dark-mode .dex-section-heading{color:#f2eafa}
+body.dark-mode .dex-overview p,body.dark-mode .dex-help{color:#c8c3d4}
+body.dark-mode .dex-total{color:#cfb8ff}
+body.dark-mode .dex-card,body.dark-mode .dex-card.rarity-rare,body.dark-mode .dex-card.rarity-epic,body.dark-mode .dex-card.rarity-legendary{background:#30394b;color:#f0f3ff}
+body.dark-mode .dex-card small{color:#c5c8d4}
+body.dark-mode .shop-v2 .dex-filter{background:#30394b;color:#f0f3ff}
+body.dark-mode .shop-v2 .dex-filter.active{background:#526990}
