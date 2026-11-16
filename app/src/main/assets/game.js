@@ -75,6 +75,33 @@
       return `<div class="profile-record-row"><b>${n}×${n}</b><span>일반 ${normal?runTimeText(normal.ms):'--:--'}</span><span>힌트 ${assisted?runTimeText(assisted.ms):'--:--'}</span><span>데일리 ${daily?runTimeText(daily.ms):'--:--'}</span></div>`;
     }).join('');
   }
+  const settingsDefaults={sound:true,volume:65,vibration:true,animation:true,timer:true,errors:true,accessible:false,dark:false};
+  function readSettings(){
+    try{return {...settingsDefaults,...JSON.parse(localStorage.getItem('nyangdoku-settings-v1')||'{}')}}catch{return {...settingsDefaults}}
+  }
+  let preferences=readSettings();
+  function applySettings(){
+    document.body.classList.toggle('reduced-effects',!preferences.animation);
+    document.body.classList.toggle('color-assist',!!preferences.accessible);
+    document.body.classList.toggle('dark-mode',!!preferences.dark);
+    $('runTimer').classList.toggle('timer-hidden',!preferences.timer);
+    const pairs={Sound:'sound',Vibration:'vibration',Animation:'animation',Timer:'timer',Errors:'errors',Accessible:'accessible',Dark:'dark'};
+    Object.entries(pairs).forEach(([id,key])=>{$('setting'+id).checked=!!preferences[key]});
+    $('settingVolume').value=preferences.volume;
+    $('settingVolumeValue').textContent=preferences.volume+'%';
+    $('settingVolume').disabled=!preferences.sound;
+  }
+  function saveSettings(){localStorage.setItem('nyangdoku-settings-v1',JSON.stringify(preferences));applySettings()}
+  function vibrateGame(kind){
+    if(!preferences.vibration||!navigator.vibrate)return;
+    try{navigator.vibrate(kind==='wrong'?[45,35,65]:kind==='win'?[30,45,60]:12)}catch{}
+  }
+  function openSettings(){
+    runPause();
+    applySettings();
+    $('settingsModal').classList.remove('hidden');
+  }
+  function closeSettings(){$('settingsModal').classList.add('hidden')}
   function progressKey(){return gameMode==='daily'?'daily:'+dailyDateKey:'stage:'+save.level}
   function puzzleSignature(p){return stageHash(`${p.n}|${p.regions.join(',')}|${p.fixedCats.map(x=>x.join(',')).join(';')}`)}
   function saveBoard(){if(!puzzle)return;save.boardProgress ||= {};save.boardProgress[progressKey()]={signature:puzzleSignature(puzzle),cells:cells.slice(),undo:undoHistory.slice(-150),runElapsed:runCurrentMs(),runHintUsed};persist()}
@@ -168,9 +195,9 @@
     }
     throw new Error('데일리 퍼즐 생성에 실패했다냥!');
   }
-  function render(){closePause();$('switchModeBtn').style.display=gameMode==='daily'?'block':'none';$('pauseSwitchBtn').style.display=gameMode==='daily'?'block':'none';clearTimeout(clearTimer);clearPending=false;const isDaily=gameMode==='daily';puzzle=isDaily?dailyPuzzle(dailyDateKey):makePuzzle(save.level);cells=Array.from({length:puzzle.n*puzzle.n},()=>0);mistakes=isDaily?(save.dailyProgress[dailyDateKey]?.mistakes||0):(save.stageMistakes[save.level]||0);stageFailed=false;$('screenHeading').textContent=isDaily?'데일리 챌린지':`레벨 ${save.level}`;$('score').textContent=save.score;$('hints').textContent=save.hints;$('levelInfo').textContent=isDaily?`${dateLabel(dailyDateKey)} · ${puzzle.n} × ${puzzle.n} · 데일리 챌린지`:`${puzzle.n} × ${puzzle.n} · 힌트 고양이 ${puzzle.fixedCats.length}마리`;updateHearts();
+  function render(){applySettings();closePause();$('switchModeBtn').style.display=gameMode==='daily'?'block':'none';$('pauseSwitchBtn').style.display=gameMode==='daily'?'block':'none';clearTimeout(clearTimer);clearPending=false;const isDaily=gameMode==='daily';puzzle=isDaily?dailyPuzzle(dailyDateKey):makePuzzle(save.level);cells=Array.from({length:puzzle.n*puzzle.n},()=>0);mistakes=isDaily?(save.dailyProgress[dailyDateKey]?.mistakes||0):(save.stageMistakes[save.level]||0);stageFailed=false;$('screenHeading').textContent=isDaily?'데일리 챌린지':`레벨 ${save.level}`;$('score').textContent=save.score;$('hints').textContent=save.hints;$('levelInfo').textContent=isDaily?`${dateLabel(dailyDateKey)} · ${puzzle.n} × ${puzzle.n} · 데일리 챌린지`:`${puzzle.n} × ${puzzle.n} · 힌트 고양이 ${puzzle.fixedCats.length}마리`;updateHearts();
     const board=$('board');board.innerHTML='';board.style.gridTemplateColumns=`repeat(${puzzle.n},minmax(0,1fr))`;board.style.gridTemplateRows=`repeat(${puzzle.n},minmax(0,1fr))`;board.style.gap=puzzle.n>=8?'3px':'5px';
-    for(let i=0;i<puzzle.n*puzzle.n;i++){const r=Math.floor(i/puzzle.n),c=i%puzzle.n,el=document.createElement('button');el.className=`cell ${regionColor[puzzle.regions[i]%colors]}`;el.setAttribute('role','gridcell');el.setAttribute('aria-label',`행 ${r+1}, 열 ${c+1}`);el.dataset.i=i;board.appendChild(el)}
+    for(let i=0;i<puzzle.n*puzzle.n;i++){const r=Math.floor(i/puzzle.n),c=i%puzzle.n,el=document.createElement('button');el.className=`cell ${regionColor[puzzle.regions[i]%colors]}`;el.setAttribute('role','gridcell');el.setAttribute('aria-label',`행 ${r+1}, 열 ${c+1}`);el.dataset.i=i;el.dataset.region=puzzle.regions[i]+1;board.appendChild(el)}
     puzzle.fixedCats.forEach(([r,c])=>{const i=r*puzzle.n+c;cells[i]=2;drawCell(i);$('board').children[i].classList.add('locked');$('board').children[i].setAttribute('aria-label',`행 ${r+1}, 열 ${c+1}, 고정 힌트 고양이`)});
     undoHistory=[];runReset();const progress=save.boardProgress?.[progressKey()];if(progress?.signature===puzzleSignature(puzzle)&&Array.isArray(progress.cells)&&progress.cells.length===cells.length){const locked=new Set(puzzle.fixedCats.map(([r,c])=>r*puzzle.n+c));if(progress.cells.every((v,i)=>(v===0||v===1||v===2)&&(!locked.has(i)||v===2))){cells=progress.cells.slice();undoHistory=Array.isArray(progress.undo)?progress.undo.filter(x=>Number.isInteger(x.i)&&x.i>=0&&x.i<cells.length&&!locked.has(x.i)&&[0,1,2].includes(x.previous)&&[0,1,2].includes(x.value)).slice(-150):[];cells.forEach((_,i)=>drawCell(i));runElapsed=Math.max(0,Number(progress.runElapsed)||0);runHintUsed=!!progress.runHintUsed;runTimerDraw()}}else if(progress){delete save.boardProgress[progressKey()]}
     requestAnimationFrame(()=>{board.style.height=`${board.clientWidth}px`});renderCatAppearance();$('caption').textContent='한 번 터치 X · 두 번 터치 고양이 · 드래그 X다냥!';persist();if(!save.tutorialDone)showTutorial();if(mistakes>=3)failStage();}
@@ -180,6 +207,7 @@
   function showWrongMove(i){
     const cell=$('board').children[i];
     if(!cell)return;
+    if(!preferences.errors)return;
     cell.classList.remove('mistake-flash');
     cell.querySelectorAll('.wrong-x').forEach(x=>x.remove());
     const mark=document.createElement('span');
@@ -193,6 +221,7 @@
   }
   let xAudioContext=null,lastXSoundAt=0;
   function playXSound(){
+    if(!preferences.sound||preferences.volume<=0)return;
     const now=performance.now();
     if(now-lastXSoundAt<75)return;
     lastXSoundAt=now;
@@ -206,7 +235,7 @@
       osc.frequency.setValueAtTime(620,t);
       osc.frequency.exponentialRampToValueAtTime(410,t+.055);
       gain.gain.setValueAtTime(.0001,t);
-      gain.gain.exponentialRampToValueAtTime(.045,t+.008);
+      gain.gain.exponentialRampToValueAtTime(.045*preferences.volume/100,t+.008);
       gain.gain.exponentialRampToValueAtTime(.0001,t+.075);
       osc.connect(gain);gain.connect(xAudioContext.destination);
       osc.start(t);osc.stop(t+.08);
@@ -223,6 +252,7 @@
   }
   let lastGameSoundAt=0;
   function gameTone(kind){
+    if(!preferences.sound||preferences.volume<=0)return;
     const now=performance.now();
     if(now-lastGameSoundAt<65&&kind!=='wrong')return;
     lastGameSoundAt=now;
@@ -246,7 +276,7 @@
         osc.frequency.setValueAtTime(from,at);
         osc.frequency.exponentialRampToValueAtTime(to,at+duration);
         gain.gain.setValueAtTime(.0001,at);
-        gain.gain.exponentialRampToValueAtTime(volume,at+.012);
+        gain.gain.exponentialRampToValueAtTime(volume*preferences.volume/100,at+.012);
         gain.gain.exponentialRampToValueAtTime(.0001,at+duration);
         osc.connect(gain);gain.connect(ctx.destination);
         osc.start(at);osc.stop(at+duration+.012);
@@ -279,9 +309,8 @@
       persist();
       updateHearts();
       showWrongMove(i);
-      gameTone('wrong');
-      $('caption').textContent=mistakes>=3?'틀렸어! 기회가 모두 끝났어.':`틀렸어! 빨간 X · 남은 기회 ${3-mistakes}번`;
-      showToast(mistakes>=3?'틀렸어! 마지막 기회를 사용했어':`틀렸어! 남은 기회 ${3-mistakes}번`);
+      gameTone('wrong');vibrateGame('wrong');
+      if(preferences.errors){$('caption').textContent=mistakes>=3?'틀렸어! 기회가 모두 끝났어.':`틀렸어! 빨간 X · 남은 기회 ${3-mistakes}번`;showToast(mistakes>=3?'틀렸어! 마지막 기회를 사용했어':`틀렸어! 남은 기회 ${3-mistakes}번`)}
       if(mistakes>=3)setTimeout(()=>{if(!stageFailed)failStage()},900);
       return;
     }
@@ -290,7 +319,7 @@
     cells[i]=value;
     drawCell(i);
     if(value===1||previous===1)animateXMark(i,value===1);
-    if(value===2){gameCellFeedback(i,'cat');gameTone('cat')}
+    if(value===2){gameCellFeedback(i,'cat');gameTone('cat');vibrateGame('cat')}
     saveBoard();
     if(check)validate();
   }
@@ -305,8 +334,8 @@
   function validate(){const placed=[];cells.forEach((v,i)=>{if(v===2)placed.push([Math.floor(i/puzzle.n),i%puzzle.n,i])});$('board').querySelectorAll('.cell').forEach(el=>el.classList.remove('error'));let bad=new Set();for(let a=0;a<placed.length;a++){const [r,c,i]=placed[a];for(let b=a+1;b<placed.length;b++){const [rr,cc,j]=placed[b];if(r===rr||c===cc||puzzle.regions[i]===puzzle.regions[j]||(Math.abs(r-rr)<=1&&Math.abs(c-cc)<=1)){bad.add(i);bad.add(j)}}if(placed.length===puzzle.n&&!validPlacement(placed))bad.add(i)}
     bad.forEach(i=>$('board').children[i].classList.add('error'));if(bad.size){showToast('이 배치로는 답이 안 맞아. 빨간 칸을 다시 확인해봐');$('caption').textContent='정답이 아니거나 규칙이 겹친 칸을 살펴봐';return}
     if(placed.length===puzzle.n&&validPlacement(placed))finish()}
-  function celebrate(){document.querySelectorAll('.cell.cat').forEach((el,i)=>{el.classList.remove('celebrate-cat');el.style.setProperty('--celebrate-delay',`${i*45}ms`);void el.offsetWidth;el.classList.add('celebrate-cat')});const layer=document.createElement('div');layer.className='confetti-layer';layer.setAttribute('aria-hidden','true');const palette=['#f3be4f','#eaa7c6','#67b3db','#a9d48e','#b4a6df','#fff'];for(let i=0;i<70;i++){const piece=document.createElement('i');piece.style.setProperty('--x',`${Math.random()*100}vw`);piece.style.setProperty('--delay',`${Math.random()*220}ms`);piece.style.setProperty('--duration',`${1.4+Math.random()*.9}s`);piece.style.setProperty('--spin',`${Math.floor(Math.random()*900-450)}deg`);piece.style.setProperty('--piece-color',palette[i%palette.length]);layer.appendChild(piece)}document.body.appendChild(layer);setTimeout(()=>layer.remove(),3500);$('modal').classList.add('celebration-modal');setTimeout(()=>$('modal').classList.remove('celebration-modal'),900)}
-  function finish(){if(!clearPending){const result=recordResult();runPause();clearPending=true;gameTone('win');clearBoard();const wasDaily=gameMode==='daily',alreadyWon=wasDaily&&save.dailyResults[dailyDateKey]?.completed;if(!wasDaily)save.solved++;else if(!alreadyWon){save.dailyWins=(save.dailyWins||0)+1;save.dailyResults[dailyDateKey]={completed:true,mistakes};save.dailyProgress[dailyDateKey]={mistakes,completed:true}}const coinReward=(!wasDaily||!alreadyWon)?puzzle.n*10:0;if(coinReward)recordMissionWin(wasDaily,!alreadyWon,mistakes===0);if(coinReward){save.score+=puzzle.n*100;save.coins+=coinReward}persist();$('score').textContent=save.score;$('hints').textContent=save.hints;updateCoins();$('caption').textContent=wasDaily?'챌린지를 완료했다냥!':'완벽하다냥!';$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modalTitle').textContent=wasDaily?'챌린지 완료다냥!':'참 잘했다냥!';$('modalText').textContent=wasDaily?`${dateLabel(dailyDateKey)} 완료! 🐟 ${coinReward}코인을 얻었다냥!`:`레벨 ${save.level} 클리어! 🐟 ${coinReward}코인을 얻었다냥!`;$('modalButton').textContent=wasDaily?'달력으로':'다음 레벨 →';const recordEl=$('recordResult');recordEl.classList.remove('hidden');recordEl.textContent=(result.isBest?'🏆 NEW RECORD! · ':'클리어 기록 · ')+runTimeText(result.ms)+(result.clean?' · 힌트 없이':' · 힌트 사용')+(result.perfect?' · 퍼펙트!':'');celebrate();clearTimer=setTimeout(()=>{$('modal').classList.remove('hidden');$('modal').classList.add('reward-pop');setTimeout(()=>$('modal').classList.remove('reward-pop'),850)},1000)}}
+  function celebrate(){if(!preferences.animation)return;document.querySelectorAll('.cell.cat').forEach((el,i)=>{el.classList.remove('celebrate-cat');el.style.setProperty('--celebrate-delay',`${i*45}ms`);void el.offsetWidth;el.classList.add('celebrate-cat')});const layer=document.createElement('div');layer.className='confetti-layer';layer.setAttribute('aria-hidden','true');const palette=['#f3be4f','#eaa7c6','#67b3db','#a9d48e','#b4a6df','#fff'];for(let i=0;i<70;i++){const piece=document.createElement('i');piece.style.setProperty('--x',`${Math.random()*100}vw`);piece.style.setProperty('--delay',`${Math.random()*220}ms`);piece.style.setProperty('--duration',`${1.4+Math.random()*.9}s`);piece.style.setProperty('--spin',`${Math.floor(Math.random()*900-450)}deg`);piece.style.setProperty('--piece-color',palette[i%palette.length]);layer.appendChild(piece)}document.body.appendChild(layer);setTimeout(()=>layer.remove(),3500);$('modal').classList.add('celebration-modal');setTimeout(()=>$('modal').classList.remove('celebration-modal'),900)}
+  function finish(){if(!clearPending){const result=recordResult();runPause();clearPending=true;gameTone('win');vibrateGame('win');clearBoard();const wasDaily=gameMode==='daily',alreadyWon=wasDaily&&save.dailyResults[dailyDateKey]?.completed;if(!wasDaily)save.solved++;else if(!alreadyWon){save.dailyWins=(save.dailyWins||0)+1;save.dailyResults[dailyDateKey]={completed:true,mistakes};save.dailyProgress[dailyDateKey]={mistakes,completed:true}}const coinReward=(!wasDaily||!alreadyWon)?puzzle.n*10:0;if(coinReward)recordMissionWin(wasDaily,!alreadyWon,mistakes===0);if(coinReward){save.score+=puzzle.n*100;save.coins+=coinReward}persist();$('score').textContent=save.score;$('hints').textContent=save.hints;updateCoins();$('caption').textContent=wasDaily?'챌린지를 완료했다냥!':'완벽하다냥!';$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modalTitle').textContent=wasDaily?'챌린지 완료다냥!':'참 잘했다냥!';$('modalText').textContent=wasDaily?`${dateLabel(dailyDateKey)} 완료! 🐟 ${coinReward}코인을 얻었다냥!`:`레벨 ${save.level} 클리어! 🐟 ${coinReward}코인을 얻었다냥!`;$('modalButton').textContent=wasDaily?'달력으로':'다음 레벨 →';const recordEl=$('recordResult');recordEl.classList.remove('hidden');recordEl.textContent=(result.isBest?'🏆 NEW RECORD! · ':'클리어 기록 · ')+runTimeText(result.ms)+(result.clean?' · 힌트 없이':' · 힌트 사용')+(result.perfect?' · 퍼펙트!':'');celebrate();clearTimer=setTimeout(()=>{$('modal').classList.remove('hidden');$('modal').classList.add('reward-pop');setTimeout(()=>$('modal').classList.remove('reward-pop'),850)},1000)}}
   function showToast(msg){const el=$('toast');el.textContent=msg.endsWith('냥!')?msg:msg.replace(/[.! ]+$/,'')+'다냥!';el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),1900)}
   let milestoneAdPending=false;
   function advanceStage(){milestoneAdPending=false;clearPending=false;clearBoard();save.level++;persist();$('modal').classList.add('hidden');render()}
@@ -356,7 +385,12 @@
   $('pauseSwitchBtn').addEventListener('click',switchToStage);
   $('profileBtn').addEventListener('click',()=>{runPause();renderProfile();$('profileModal').classList.remove('hidden')});$('profileClose').addEventListener('click',()=>{$('profileModal').classList.add('hidden');runTimerDraw()});
   $('missionBtn').addEventListener('click',openMissions);$('missionCloseX').addEventListener('click',()=> $('missionModal').classList.add('hidden'));$('attendanceClaim').addEventListener('click',claimAttendance);$('dailyMissionTab').addEventListener('click',()=>{missionTab='daily';renderMissions()});$('weeklyMissionTab').addEventListener('click',()=>{missionTab='weekly';renderMissions()});for(const [tab,suffix] of Object.entries({cats:'Cats',extras:'Extras'}))$('shopTab'+suffix).addEventListener('click',()=>selectShopTab(tab));$('shopBtn').addEventListener('click',showShop);const closeShop=()=> $('shopModal').classList.add('hidden');$('closeShopBtn').addEventListener('click',closeShop);$('shopCloseX').addEventListener('click',closeShop);$('purchaseAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.buyRemoveAds?.());$('restoreAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.restorePurchases?.());$('rewardHintBtn').addEventListener('click',rewardHints);window.NyangdokuAds?.isAdFree?.();
-  $('hintBtn').addEventListener('click',getHint);$('undoBtn').addEventListener('click',()=>{if(stageFailed||clearPending)return;runStart();const move=undoHistory.pop();if(!move){showToast('되돌릴 기록이 없다냥!');return}cells[move.i]=move.previous;drawCell(move.i);gameCellFeedback(move.i,'undo');gameTone('undo');saveBoard();validate();$('caption').textContent='마지막 입력을 되돌렸다냥!'});$('modalButton').addEventListener('click',advanceModal);$('gameCloseX').addEventListener('click',()=>{if(tutorialStep>=0){tutorialStep=-1;save.tutorialDone=true;persist();$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modal').classList.add('hidden');return}advanceModal()});$('settingsBtn').addEventListener('click',()=>showToast('진행 상황은 이 기기에 자동 저장돼'));
+  $('hintBtn').addEventListener('click',getHint);$('undoBtn').addEventListener('click',()=>{if(stageFailed||clearPending)return;runStart();const move=undoHistory.pop();if(!move){showToast('되돌릴 기록이 없다냥!');return}cells[move.i]=move.previous;drawCell(move.i);gameCellFeedback(move.i,'undo');gameTone('undo');saveBoard();validate();$('caption').textContent='마지막 입력을 되돌렸다냥!'});$('modalButton').addEventListener('click',advanceModal);$('gameCloseX').addEventListener('click',()=>{if(tutorialStep>=0){tutorialStep=-1;save.tutorialDone=true;persist();$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modal').classList.add('hidden');return}advanceModal()});$('settingsBtn').addEventListener('click',openSettings);
+  $('settingsClose').addEventListener('click',closeSettings);
+  const settingsControls={Sound:'sound',Vibration:'vibration',Animation:'animation',Timer:'timer',Errors:'errors',Accessible:'accessible',Dark:'dark'};
+  Object.entries(settingsControls).forEach(([id,key])=>$('setting'+id).addEventListener('change',e=>{preferences[key]=e.target.checked;saveSettings()}));
+  $('settingVolume').addEventListener('input',e=>{preferences.volume=Math.max(0,Math.min(100,Number(e.target.value)));saveSettings()});
+  $('settingsRules').addEventListener('click',()=>{closeSettings();showTutorial()});
   $('dailyBtn').addEventListener('click',()=>{if(isManuallyPaused())closePause();openDailyCalendar()});$('dailyBack').addEventListener('click',leaveCalendar);$('dailyContinue').addEventListener('click',startDaily);$('dailyInfo').addEventListener('click',dailyInfo);$('monthlyTrophyBtn').addEventListener('click',dailyInfo);$('prevMonth').addEventListener('click',()=>shiftMonth(-1));$('nextMonth').addEventListener('click',()=>shiftMonth(1));
   const boardElement=$('board');boardElement.addEventListener('pointerdown',boardPointerDown);boardElement.addEventListener('pointermove',boardPointerMove);boardElement.addEventListener('pointerup',boardPointerUp);boardElement.addEventListener('pointercancel',()=>{pointerPath=null});
   const studioSplash=$('studioSplash');if(studioSplash){setTimeout(()=>{studioSplash.classList.add('studio-splash-out');setTimeout(()=>studioSplash.remove(),650)},1350)}
