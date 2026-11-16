@@ -129,20 +129,20 @@
     {id:'tuxedo',name:'턱시도냥이',price:1,file:'tuxedo.png'},
     {id:'CheeseChristmas',name:'크리스마스 치즈냥이',file:'CheeseChristmas.png',rarity:'epic'},
     {id:'CheeseHalloween',name:'할로윈 치즈냥이',file:'CheeseHalloween.png',rarity:'epic'},
-    {id:'LionSummer',name:'여름 사자냥이',file:'LionSummer.png',rarity:'epic'},
-    {id:'LionChristmas',name:'크리스마스 사자냥이',file:'LionChristmas.png',rarity:'epic'},
-    {id:'ShamDesert',name:'사막 샴냥이',file:'ShamDesert.png',rarity:'epic'},
-    {id:'ShamChristmas',name:'크리스마스 샴냥이',file:'ShamChristmas.png',rarity:'epic'},
-    {id:'TigerJungle',name:'정글 호랑이냥이',file:'TigerJungle.png',rarity:'epic'},
-    {id:'TigerChristmas',name:'크리스마스 호랑이냥이',file:'TigerChristmas.png',rarity:'epic'},
+    {id:'LionSummer',name:'여름 사자',file:'LionSummer.png',rarity:'epic'},
+    {id:'LionChristmas',name:'크리스마스 사자',file:'LionChristmas.png',rarity:'epic'},
+    {id:'ShamDesert',name:'사막 샴',file:'ShamDesert.png',rarity:'epic'},
+    {id:'ShamChristmas',name:'크리스마스 샴',file:'ShamChristmas.png',rarity:'epic'},
+    {id:'TigerJungle',name:'정글 호랑이',file:'TigerJungle.png',rarity:'epic'},
+    {id:'TigerChristmas',name:'크리스마스 호랑이',file:'TigerChristmas.png',rarity:'epic'},
     {id:'Grayautumn',name:'가을 회색냥이',file:'Grayautumn.png',rarity:'epic'},
     {id:'GrayChristmas',name:'크리스마스 회색냥이',file:'GrayChristmas.png',rarity:'epic'},
-    {id:'PantherSpring',name:'봄 팬서냥이',file:'PantherSpring.png',rarity:'epic'},
-    {id:'LeopardChristmas',name:'크리스마스 표범냥이',file:'LeopardChristmas.png',rarity:'epic'},
-    {id:'ManulWinter',name:'겨울 마눌냥이',file:'ManulWinter.png',rarity:'epic'},
-    {id:'ManulYeoreum',name:'여름 마눌냥이',file:'ManulYeoreum.png',rarity:'epic'},
-    {id:'KingSinsa',name:'왕 신사냥이',file:'KingSinsa.png',rarity:'rare'},
-    {id:'SoldierSinsa',name:'군인 신사냥이',file:'SoldierSinsa.png',rarity:'rare'}
+    {id:'PantherSpring',name:'봄 표범',file:'PantherSpring.png',rarity:'epic'},
+    {id:'LeopardChristmas',name:'크리스마스 표범',file:'LeopardChristmas.png',rarity:'epic'},
+    {id:'ManulWinter',name:'겨울 마눌',file:'ManulWinter.png',rarity:'epic'},
+    {id:'ManulYeoreum',name:'여름 마눌',file:'ManulYeoreum.png',rarity:'epic'},
+    {id:'KingSinsa',name:'왕 신사',file:'KingSinsa.png',rarity:'rare'},
+    {id:'SoldierSinsa',name:'군인 신사',file:'SoldierSinsa.png',rarity:'rare'}
   ];
   // Rarity weights apply only to tiers that have actual skins in the catalog.
   // Adding a skin with rarity:'rare'/'epic'/'legendary' activates that tier.
