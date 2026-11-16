@@ -127,6 +127,47 @@
     {id:'lion',name:'사자',price:1,file:'lion.png'},
     {id:'leopard',name:'표범',price:1,file:'leopard.png'}
   ];
+  // Rarity weights apply only to tiers that have actual skins in the catalog.
+  // Adding a skin with rarity:'rare'/'epic'/'legendary' activates that tier.
+  const rarityConfig={
+    common:{label:'일반',weight:70},
+    rare:{label:'희귀',weight:20},
+    epic:{label:'영웅',weight:8},
+    legendary:{label:'전설',weight:2}
+  };
+  const GACHA_COST=100,GACHA_DUPLICATE_REFUND=40;
+  catCatalog.forEach(cat=>{cat.rarity=cat.rarity||'common'});
+  function gachaPool(){return catCatalog.filter(cat=>rarityConfig[cat.rarity])}
+  function gachaTierRates(){
+    const pool=gachaPool(),tiers=Object.entries(rarityConfig).filter(([tier])=>pool.some(cat=>cat.rarity===tier));
+    const total=tiers.reduce((sum,[,cfg])=>sum+cfg.weight,0);
+    return tiers.map(([tier,cfg])=>({tier,label:cfg.label,weight:cfg.weight,percent:cfg.weight/total*100}));
+  }
+  function gachaDraw(){
+    if(save.coins<GACHA_COST){showToast('코인이 부족하다냥!');return}
+    const pool=gachaPool(),rates=gachaTierRates();
+    if(!pool.length){showToast('뽑을 수 있는 고양이가 없어!');return}
+    let roll=Math.random()*100,selected=rates[rates.length-1].tier;
+    for(const tier of rates){roll-=tier.percent;if(roll<0){selected=tier.tier;break}}
+    const choices=pool.filter(cat=>cat.rarity===selected);
+    const cat=choices[Math.floor(Math.random()*choices.length)];
+    const duplicate=save.ownedCats.includes(cat.id);
+    save.coins-=GACHA_COST;
+    if(duplicate)save.coins+=GACHA_DUPLICATE_REFUND;
+    else save.ownedCats.push(cat.id);
+    persist();updateCoins();renderCatShop();
+    const result=$('gachaResult');result.classList.remove('hidden');
+    result.innerHTML='';
+    const image=document.createElement('img');image.src=cat.file;image.alt=cat.name;image.onerror=()=>{image.onerror=null;image.src='cat.png'};
+    const info=document.createElement('div');
+    const label=document.createElement('small');label.textContent=rarityConfig[cat.rarity].label+' 등급';
+    const name=document.createElement('strong');name.textContent=cat.name;
+    const message=document.createElement('p');message.textContent=duplicate?`중복 획득! 🐟 ${GACHA_DUPLICATE_REFUND}코인 환급`:'새로운 고양이 획득!';
+    info.append(label,name,message);result.append(image,info);
+    result.classList.remove('gacha-reveal');void result.offsetWidth;result.classList.add('gacha-reveal');
+    gameTone(duplicate?'undo':'win');vibrateGame(duplicate?'cat':'win');
+    showToast(duplicate?'중복 냥이! 코인을 돌려받았어':'새로운 냥이를 획득했어!');
+  }
   const backgroundCatalog=[];
   const markCatalog=[];
   save.ownedMarks ||= ['default'];save.equippedMark ||= 'default';
@@ -138,7 +179,28 @@
   function renderCosmeticShop(type){const isBg=type==='background',grid=$(isBg?'backgroundShopGrid':'markShopGrid'),catalog=isBg?backgroundCatalog:markCatalog,owned=isBg?save.ownedBackgrounds:save.ownedMarks,equipped=isBg?save.equippedBackground:save.equippedMark;grid.innerHTML='';const all=[{id:'default',name:isBg?'기본 배경':'기본 X',price:0,file:null},...catalog];for(const item of all){const has=owned.includes(item.id),active=equipped===item.id,card=document.createElement('div');card.className='cosmetic-card'+(active?' equipped':'');const visual=document.createElement('div');visual.className='cosmetic-preview '+(isBg?'background-preview':'mark-preview');if(item.file){const img=document.createElement('img');img.src=item.file;img.alt=item.name;img.loading='lazy';visual.appendChild(img)}else visual.textContent=isBg?'기본':'×';const title=document.createElement('strong');title.textContent=item.name;const price=document.createElement('small');price.textContent=has?(active?'장착 중':'보유 중'):`🐟 ${item.price}코인`;const btn=document.createElement('button');btn.textContent=active?'장착 완료':has?'장착하기':'구매하기';btn.disabled=active;btn.addEventListener('click',()=>{if(!owned.includes(item.id)){if(save.coins<item.price){showToast('코인이 부족하다냥!');return}if(!confirm(`${item.name}을(를) ${item.price}코인에 구매할까냥?`))return;save.coins-=item.price;owned.push(item.id)}if(isBg){save.equippedBackground=item.id;applyBackground()}else{save.equippedMark=item.id;if(puzzle)cells.forEach((v,i)=>{if(v===1)drawCell(i)})}persist();updateCoins();renderCosmeticShop(type);showToast(`${item.name} 장착 완료다냥!`)});card.append(visual,title,price,btn);grid.appendChild(card)}}
   const selectedCat=()=>catCatalog.find(x=>x.id===save.equippedCat);
   const catImage=()=>selectedCat()?.file||'cat.png';
-  function renderCatShop(){const grid=$('catShopGrid');grid.innerHTML='';const all=[{id:'default',name:'기본 냥이',price:0,file:'cat.png'},...catCatalog];for(const cat of all){const owned=save.ownedCats.includes(cat.id),equipped=save.equippedCat===cat.id,card=document.createElement('div');card.className='cat-product'+(equipped?' equipped':'');const img=document.createElement('img');img.src=cat.file;img.alt=cat.name;img.onerror=()=>{img.onerror=null;img.src='cat.png'};const title=document.createElement('strong');title.textContent=cat.name;const price=document.createElement('span');price.textContent=owned?(equipped?'장착 중':'보유 중'):`🐟 ${cat.price.toLocaleString()}코인`;const btn=document.createElement('button');btn.textContent=equipped?'장착 완료':owned?'장착하기':'구매하기';btn.disabled=equipped;btn.addEventListener('click',()=>{if(!save.ownedCats.includes(cat.id)){if(save.coins<cat.price){showToast('코인이 부족하다냥!');return}if(!confirm(`${cat.name}을(를) ${cat.price.toLocaleString()}코인에 구매할까냥?`))return;save.coins-=cat.price;save.ownedCats.push(cat.id)}save.equippedCat=cat.id;persist();updateCoins();renderCatShop();renderCatAppearance();showToast(`${cat.name} 장착 완료다냥!`)});card.append(img,title,price,btn);grid.appendChild(card)}}
+  function renderCatShop(){
+    const grid=$('catShopGrid');grid.innerHTML='';
+    const all=[{id:'default',name:'기본 냥이',file:'cat.png',rarity:'common'},...catCatalog];
+    $('catCollectionCount').textContent=`${all.filter(cat=>save.ownedCats.includes(cat.id)).length}/${all.length}`;
+    const rates=gachaTierRates();
+    $('gachaRates').innerHTML=rates.map(tier=>`<span class="gacha-rate rarity-${tier.tier}">${tier.label} ${Number(tier.percent.toFixed(2))}%</span>`).join('');
+    $('gachaPullBtn').disabled=save.coins<GACHA_COST;
+    for(const cat of all){
+      const owned=save.ownedCats.includes(cat.id),equipped=save.equippedCat===cat.id;
+      const card=document.createElement('div');
+      card.className='cat-product'+(equipped?' equipped':'')+(!owned?' cat-locked':'');
+      const img=document.createElement('img');img.src=cat.file;img.alt=cat.name;img.onerror=()=>{img.onerror=null;img.src='cat.png'};
+      const title=document.createElement('strong');title.textContent=owned?cat.name:'???';
+      const rarity=document.createElement('span');rarity.textContent=(rarityConfig[cat.rarity]?.label||'일반')+' · '+(equipped?'장착 중':owned?'보유 중':'미획득');
+      const btn=document.createElement('button');btn.textContent=equipped?'장착 완료':owned?'장착하기':'뽑기로 획득';
+      btn.disabled=equipped||!owned;
+      if(owned&&!equipped)btn.addEventListener('click',()=>{
+        save.equippedCat=cat.id;persist();renderCatShop();renderCatAppearance();showToast(`${cat.name} 장착 완료다냥!`);
+      });
+      card.append(img,title,rarity,btn);grid.appendChild(card);
+    }
+  }
   function renderCatAppearance(){document.querySelectorAll('.cell.cat img, .cat-chip img, #gameModalCat, .shop-dialog > img').forEach(img=>{img.src=catImage()})}
   // Mission rewards are claimed manually and never grant hints.
   let missionTab='daily',runHints=0;
@@ -376,6 +438,7 @@
   $('switchModeBtn').addEventListener('click',switchToStage);
   $('pauseSwitchBtn').addEventListener('click',switchToStage);
   $('profileBtn').addEventListener('click',()=>{runPause();renderProfile();$('profileModal').classList.remove('hidden')});$('profileClose').addEventListener('click',()=>{$('profileModal').classList.add('hidden');runTimerDraw()});
+  $('gachaPullBtn').addEventListener('click',gachaDraw);
   $('missionBtn').addEventListener('click',openMissions);$('missionCloseX').addEventListener('click',()=> $('missionModal').classList.add('hidden'));$('attendanceClaim').addEventListener('click',claimAttendance);$('dailyMissionTab').addEventListener('click',()=>{missionTab='daily';renderMissions()});$('weeklyMissionTab').addEventListener('click',()=>{missionTab='weekly';renderMissions()});for(const [tab,suffix] of Object.entries({cats:'Cats',extras:'Extras'}))$('shopTab'+suffix).addEventListener('click',()=>selectShopTab(tab));$('shopBtn').addEventListener('click',showShop);const closeShop=()=> $('shopModal').classList.add('hidden');$('closeShopBtn').addEventListener('click',closeShop);$('shopCloseX').addEventListener('click',closeShop);$('purchaseAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.buyRemoveAds?.());$('restoreAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.restorePurchases?.());$('rewardHintBtn').addEventListener('click',rewardHints);window.NyangdokuAds?.isAdFree?.();
   $('hintBtn').addEventListener('click',getHint);$('undoBtn').addEventListener('click',()=>{if(stageFailed||clearPending)return;runStart();const move=undoHistory.pop();if(!move){showToast('되돌릴 기록이 없다냥!');return}cells[move.i]=move.previous;drawCell(move.i);gameCellFeedback(move.i,'undo');gameTone('undo');saveBoard();validate();$('caption').textContent='마지막 입력을 되돌렸다냥!'});$('modalButton').addEventListener('click',advanceModal);$('gameCloseX').addEventListener('click',()=>{if(tutorialStep>=0){tutorialStep=-1;save.tutorialDone=true;persist();$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modal').classList.add('hidden');return}advanceModal()});$('settingsBtn').addEventListener('click',openSettings);
   $('settingsClose').addEventListener('click',closeSettings);
