@@ -13,10 +13,12 @@
       <button class="round mission-launch" id="missionBtn" aria-label="미션과 출석">📋</button>
       <button class="round daily-launch" id="dailyBtn" aria-label="데일리 챌린지">🏆</button>
       <button class="round shop-launch" id="shopBtn" aria-label="상점">🛍</button>
+      <button class="round profile-launch" id="profileBtn" aria-label="내 프로필">👤</button>
       <button class="round settings" id="settingsBtn" aria-label="설정">⚙</button>
     </header>
     <section class="progress"><div class="cat-chip"><img src="cat.png" alt="냥도쿠 고양이"><span id="mood">오늘도 한 판이다냥!</span></div><div class="score"><span>점수</span><b id="score">0</b><span class="coin-count">🐟 <b id="coins">0</b> 코인</span><div class="hearts" id="hearts" aria-label="실수 기회 3회">♥ ♥ ♥</div></div></section>
     
+    <div class="run-timer" id="runTimer" aria-live="off"><span id="runTimerState">첫 터치부터 기록</span><strong id="runTimerValue">00:00</strong></div>
     <section class="game-area">
       <div class="board-wrap"><div id="board" class="board" role="grid" aria-label="냥도쿠 퍼즐"></div></div>
       <div class="caption"><span class="dot"></span><span id="caption">빈칸은 한 번, 고양이는 빠르게 두 번 눌러 표시해</span></div>
@@ -27,6 +29,7 @@
       
     </section>
     <footer><span id="levelInfo">4 × 4 · 고양이 4마리</span></footer>
+    <div class="modal hidden" id="profileModal"><div class="dialog profile-dialog"><button type="button" class="modal-close" id="profileClose" aria-label="프로필 닫기">×</button><div class="profile-avatar">🐱</div><h2>내 냥도쿠 기록</h2><p class="profile-subtitle">나만의 퍼즐 성장 기록</p><div id="profileStats" class="profile-stats"></div><h3>퍼즐 크기별 최고 기록</h3><div id="profileRecords" class="profile-records"></div><p class="profile-note">시간제한 없음 · 힌트 사용 기록은 별도 집계 · 기록은 이 기기에 저장</p></div></div>
     <div class="modal hidden" id="missionModal"><div class="dialog mission-dialog"><button type="button" class="modal-close" id="missionCloseX" aria-label="미션 닫기">×</button><h2>냥냥 미션</h2><p id="attendanceStatus">출석 확인 중이다냥!</p><button id="attendanceClaim">오늘의 출석 보상 받기</button><p id="missionStreak"></p><div class="mission-tabs"><button id="dailyMissionTab" class="active">일일 미션</button><button id="weeklyMissionTab">주간 미션</button></div><div id="missionList"></div></div></div>
     <div class="modal hidden" id="shopModal">
       <div class="dialog shop-dialog shop-v2">
@@ -47,7 +50,7 @@
       </div>
     </div>
         <div class="toast" id="toast" role="status"></div>
-    <div class="modal hidden" id="modal"><div class="dialog"><button type="button" class="modal-close" id="gameCloseX" aria-label="창 닫기">×</button><img id="gameModalCat" src="cat.png" alt=""><h2 id="modalTitle">참 잘했다냥!</h2><p id="modalText"></p><div id="tutorialDemo" class="tutorial-demo hidden"></div><div id="tutorialCounter" class="tutorial-counter hidden"></div><button id="modalButton">계속하기</button></div></div>
+    <div class="modal hidden" id="modal"><div class="dialog"><button type="button" class="modal-close" id="gameCloseX" aria-label="창 닫기">×</button><img id="gameModalCat" src="cat.png" alt=""><h2 id="modalTitle">참 잘했다냥!</h2><p id="modalText"></p><p id="recordResult" class="record-result hidden"></p><div id="tutorialDemo" class="tutorial-demo hidden"></div><div id="tutorialCounter" class="tutorial-counter hidden"></div><button id="modalButton">계속하기</button></div></div>
   </main>
   <section class="daily-screen hidden" id="dailyScreen" aria-label="데일리 챌린지">
     <div class="daily-hero">
