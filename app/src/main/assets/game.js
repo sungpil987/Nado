@@ -160,7 +160,33 @@
     const total=tiers.reduce((sum,[,cfg])=>sum+cfg.weight,0);
     return tiers.map(([tier,cfg])=>({tier,label:cfg.label,weight:cfg.weight,percent:cfg.weight/total*100}));
   }
+  let gachaAnimating=false,gachaRevealTimer=null,gachaFinishTimer=null,gachaPending=null;
+  function gachaClose(){
+    clearTimeout(gachaRevealTimer);clearTimeout(gachaFinishTimer);
+    $('gachaCinematic').classList.add('hidden');
+    $('gachaCinematic').classList.remove('gacha-rare','gacha-epic','gacha-legendary','gacha-common','gacha-show-prize');
+    gachaAnimating=false;gachaPending=null;
+  }
+  function gachaReveal(){
+    if(!gachaAnimating||!gachaPending)return;
+    clearTimeout(gachaRevealTimer);clearTimeout(gachaFinishTimer);
+    const {cat,duplicate}=gachaPending;
+    const stage=$('gachaCinematic');
+    stage.classList.add('gacha-show-prize');
+    $('gachaCapsule').classList.add('hidden');
+    $('gachaPrize').classList.remove('hidden');
+    $('gachaStageText').textContent=duplicate?'이미 만난 냥이다냥!':'새로운 친구를 만났다냥!';
+    $('gachaPrizeImage').src=cat.file;
+    $('gachaPrizeImage').alt=cat.name;
+    $('gachaPrizeRarity').textContent=rarityConfig[cat.rarity].label+' 등급';
+    $('gachaPrizeName').textContent=cat.name;
+    $('gachaPrizeMessage').textContent=duplicate?`중복 보상 · 🐟 ${GACHA_DUPLICATE_REFUND}코인 환급`:'새로운 고양이 획득!';
+    $('gachaCinematicButton').textContent='확인';
+    gameTone(cat.rarity==='epic'||cat.rarity==='legendary'?'win':'cat');
+    vibrateGame(cat.rarity==='epic'||cat.rarity==='legendary'?'win':'cat');
+  }
   function gachaDraw(){
+    if(gachaAnimating)return;
     if(save.coins<GACHA_COST){showToast('코인이 부족하다냥!');return}
     const pool=gachaPool(),rates=gachaTierRates();
     if(!pool.length){showToast('뽑을 수 있는 고양이가 없어!');return}
@@ -172,6 +198,7 @@
     save.coins-=GACHA_COST;
     if(duplicate)save.coins+=GACHA_DUPLICATE_REFUND;
     else save.ownedCats.push(cat.id);
+    // Save rewards immediately, even if the player closes the app mid-animation.
     persist();updateCoins();renderCatShop();
     const result=$('gachaResult');result.classList.remove('hidden');
     result.innerHTML='';
@@ -181,9 +208,16 @@
     const name=document.createElement('strong');name.textContent=cat.name;
     const message=document.createElement('p');message.textContent=duplicate?`중복 획득! 🐟 ${GACHA_DUPLICATE_REFUND}코인 환급`:'새로운 고양이 획득!';
     info.append(label,name,message);result.append(image,info);
-    result.classList.remove('gacha-reveal');void result.offsetWidth;result.classList.add('gacha-reveal');
-    gameTone(duplicate?'undo':'win');vibrateGame(duplicate?'cat':'win');
-    showToast(duplicate?'중복 냥이! 코인을 돌려받았어':'새로운 냥이를 획득했어!');
+    gachaPending={cat,duplicate};gachaAnimating=true;
+    const stage=$('gachaCinematic');
+    stage.className='gacha-cinematic gacha-'+cat.rarity;
+    $('gachaCapsule').classList.remove('hidden');
+    $('gachaPrize').classList.add('hidden');
+    $('gachaStageText').textContent='두근두근... 어떤 냥이가 나올까?';
+    $('gachaCinematicButton').textContent='건너뛰기';
+    if(!preferences.animation){gachaReveal();return}
+    gameTone('hint');vibrateGame('hint');
+    gachaRevealTimer=setTimeout(gachaReveal,1750);
   }
   const backgroundCatalog=[];
   const markCatalog=[];
@@ -456,6 +490,7 @@
   $('pauseSwitchBtn').addEventListener('click',switchToStage);
   $('profileBtn').addEventListener('click',()=>{runPause();renderProfile();$('profileModal').classList.remove('hidden')});$('profileClose').addEventListener('click',()=>{$('profileModal').classList.add('hidden');runTimerDraw()});
   $('gachaPullBtn').addEventListener('click',gachaDraw);
+  $('gachaCinematicButton').addEventListener('click',()=>{if(!gachaAnimating)return;if(!$('gachaCinematic').classList.contains('gacha-show-prize'))gachaReveal();else gachaClose()});
   $('missionBtn').addEventListener('click',openMissions);$('missionCloseX').addEventListener('click',()=> $('missionModal').classList.add('hidden'));$('attendanceClaim').addEventListener('click',claimAttendance);$('dailyMissionTab').addEventListener('click',()=>{missionTab='daily';renderMissions()});$('weeklyMissionTab').addEventListener('click',()=>{missionTab='weekly';renderMissions()});for(const [tab,suffix] of Object.entries({cats:'Cats',extras:'Extras'}))$('shopTab'+suffix).addEventListener('click',()=>selectShopTab(tab));$('shopBtn').addEventListener('click',showShop);const closeShop=()=> $('shopModal').classList.add('hidden');$('closeShopBtn').addEventListener('click',closeShop);$('shopCloseX').addEventListener('click',closeShop);$('purchaseAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.buyRemoveAds?.());$('restoreAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.restorePurchases?.());$('rewardHintBtn').addEventListener('click',rewardHints);window.NyangdokuAds?.isAdFree?.();
   $('hintBtn').addEventListener('click',getHint);$('undoBtn').addEventListener('click',()=>{if(stageFailed||clearPending)return;runStart();const move=undoHistory.pop();if(!move){showToast('되돌릴 기록이 없다냥!');return}cells[move.i]=move.previous;drawCell(move.i);gameCellFeedback(move.i,'undo');gameTone('undo');saveBoard();validate();$('caption').textContent='마지막 입력을 되돌렸다냥!'});$('modalButton').addEventListener('click',advanceModal);$('gameCloseX').addEventListener('click',()=>{if(tutorialStep>=0){tutorialStep=-1;save.tutorialDone=true;persist();$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modal').classList.add('hidden');return}advanceModal()});$('settingsBtn').addEventListener('click',openSettings);
   $('settingsClose').addEventListener('click',closeSettings);
