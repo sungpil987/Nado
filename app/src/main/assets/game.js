@@ -214,7 +214,7 @@
     if(duplicate)save.coins+=GACHA_DUPLICATE_REFUND;
     else save.ownedCats.push(cat.id);
     // Save rewards immediately, even if the player closes the app mid-animation.
-    persist();updateCoins();renderCatShop();
+    persist();updateCoins();renderCatShop();renderCatDex();
     const result=$('gachaResult');result.classList.remove('hidden');
     result.innerHTML='';
     const image=document.createElement('img');image.src=cat.file;image.alt=cat.name;image.onerror=()=>{image.onerror=null;image.src='cat.png'};
@@ -265,6 +265,48 @@
         save.equippedCat=cat.id;persist();renderCatShop();renderCatAppearance();showToast(`${cat.name} 장착 완료다냥!`);
       });
       card.append(img,title,rarity,btn);grid.appendChild(card);
+    }
+  }
+  let dexFilter='all';
+  function renderCatDex(){
+    const all=[{id:'default',name:'기본 냥이',file:'cat.png',rarity:'common'},...catCatalog];
+    const owned=cat=>save.ownedCats.includes(cat.id);
+    const total=all.filter(owned).length;
+    $('dexTotal').textContent=`전체 수집 ${total} / ${all.length} · ${Math.round(total/all.length*100)}%`;
+    const filters=$('dexFilters');filters.innerHTML='';
+    for(const tier of ['all','common','rare','epic','legendary']){
+      const members=tier==='all'?all:all.filter(cat=>cat.rarity===tier);
+      const count=members.filter(owned).length;
+      const btn=document.createElement('button');
+      btn.type='button';btn.className='dex-filter'+(tier===dexFilter?' active':'')+' rarity-'+tier;
+      btn.textContent=`${tier==='all'?'전체':rarityConfig[tier].label} ${count}/${members.length}`;
+      btn.setAttribute('aria-pressed',String(tier===dexFilter));
+      btn.addEventListener('click',()=>{dexFilter=tier;renderCatDex()});
+      filters.appendChild(btn);
+    }
+    const selected=all.filter(cat=>dexFilter==='all'||cat.rarity===dexFilter);
+    const heading=$('dexSectionHeading');
+    heading.textContent=dexFilter==='all'?'전체 도감':rarityConfig[dexFilter].label+' 등급';
+    const grid=$('dexGrid');grid.innerHTML='';
+    if(!selected.length){
+      const empty=document.createElement('p');empty.className='dex-empty';empty.textContent='아직 이 등급의 스킨이 없어!';grid.appendChild(empty);return;
+    }
+    for(const cat of selected){
+      const unlocked=owned(cat),equipped=save.equippedCat===cat.id;
+      const card=document.createElement('div');
+      card.className='dex-card rarity-'+cat.rarity+(unlocked?' unlocked':' locked');
+      const image=document.createElement('img');image.src=cat.file;image.alt=unlocked?cat.name:'미획득 스킨';
+      image.loading='lazy';image.onerror=()=>{image.onerror=null;image.src='cat.png'};
+      const tag=document.createElement('span');tag.className='dex-rarity';tag.textContent=rarityConfig[cat.rarity].label;
+      const name=document.createElement('strong');name.textContent=unlocked?cat.name:'???';
+      const status=document.createElement('small');status.textContent=equipped?'장착 중':unlocked?'획득 완료':'미획득';
+      card.append(image,tag,name,status);
+      if(unlocked&&!equipped){
+        const btn=document.createElement('button');btn.type='button';btn.textContent='장착하기';
+        btn.addEventListener('click',()=>{save.equippedCat=cat.id;persist();renderCatDex();renderCatShop();renderCatAppearance();showToast(`${cat.name} 장착 완료다냥!`)});
+        card.appendChild(btn);
+      }
+      grid.appendChild(card);
     }
   }
   function renderCatAppearance(){document.querySelectorAll('.cell.cat img, .cat-chip img, #gameModalCat, .shop-dialog > img').forEach(img=>{img.src=catImage()})}
@@ -492,8 +534,8 @@
   window.onBillingMessage=message=>showToast(message);
   function updateShop(){const label=$('purchaseAdsBtn');if(label)label.textContent=adFree?'광고 제거 구매 완료':'광고 제거 영구 구매 · ₩3,900';const reward=$('rewardHintBtn');if(reward)reward.textContent=adFree?'무료 힌트 +2 (한 판 1회)':'광고 보고 힌트 +2'}
   let shopTab='cats';
-  function selectShopTab(tab){shopTab=tab;const ids={cats:'Cats',extras:'Extras'};for(const [key,suffix] of Object.entries(ids)){const active=key===tab;$('shopTab'+suffix).classList.toggle('active',active);$('shopTab'+suffix).setAttribute('aria-selected',String(active));$('shopPanel'+suffix).classList.toggle('hidden',!active)}$('shopScrollTop')?.scrollTo?.({top:0,behavior:'instant'});const scroll=document.querySelector('.shop-scroll');if(scroll)scroll.scrollTop=0}
-  function showShop(){runPause();updateCoins();renderCatAppearance();$('shopModal').classList.remove('hidden');renderCatShop();updateShop();selectShopTab(shopTab);window.NyangdokuAds?.isAdFree?.()}
+  function selectShopTab(tab){shopTab=tab;const ids={cats:'Cats',dex:'Dex',extras:'Extras'};for(const [key,suffix] of Object.entries(ids)){const active=key===tab;$('shopTab'+suffix).classList.toggle('active',active);$('shopTab'+suffix).setAttribute('aria-selected',String(active));$('shopPanel'+suffix).classList.toggle('hidden',!active)}$('shopScrollTop')?.scrollTo?.({top:0,behavior:'instant'});const scroll=document.querySelector('.shop-scroll');if(scroll)scroll.scrollTop=0}
+  function showShop(){runPause();updateCoins();renderCatAppearance();$('shopModal').classList.remove('hidden');renderCatShop();renderCatDex();updateShop();selectShopTab(shopTab);window.NyangdokuAds?.isAdFree?.()}
   function rewardHints(){if(rewardBusy)return;if(adFree){if(save.freeHintClaimed?.[rewardKey()]){showToast('이번 판 무료 힌트는 이미 받았어');return}save.freeHintClaimed ||= {};save.freeHintClaimed[rewardKey()]=true;save.hints+=2;persist();$('hints').textContent=save.hints;showToast('무료 힌트 2개 획득!');return}if(!window.NyangdokuAds?.showRewardedAd){showToast('Android 앱에서 이용할 수 있어');return}rewardBusy=true;window.NyangdokuAds.showRewardedAd('hint')}
   function getHint(){if(stageFailed||clearPending||isManuallyPaused())return;const options=puzzle.cats.map(([r,c])=>r*puzzle.n+c).filter(i=>cells[i]!==2);if(!options.length){showToast('이미 모든 고양이를 찾았다냥!');return}if(save.hints>0){runStart();runHintUsed=true;save.hints--;persist();$('hints').textContent=save.hints;revealHint();return}showToast('힌트가 없다냥! 상점에서 광고를 보고 충전하라냥!');showShop()}
   function revealHint(){runHintUsed=true;runStart();const options=puzzle.cats.map(([r,c])=>r*puzzle.n+c).filter(i=>cells[i]!==2);if(!options.length){showToast('모든 고양이를 이미 찾았어!');return}const i=options[0];setCell(i,2);gameTone('hint');vibrateGame('hint');$('board').children[i]?.classList.add('hint-glow');setTimeout(()=>$('board').children[i]?.classList.remove('hint-glow'),1400);$('caption').textContent='빛나는 칸에 힌트 고양이가 나타났다냥!';showToast('힌트 고양이 발견!')}
@@ -506,7 +548,7 @@
   $('profileBtn').addEventListener('click',()=>{runPause();renderProfile();$('profileModal').classList.remove('hidden')});$('profileClose').addEventListener('click',()=>{$('profileModal').classList.add('hidden');runTimerDraw()});
   $('gachaPullBtn').addEventListener('click',gachaDraw);
   $('gachaCinematicButton').addEventListener('click',()=>{if(!gachaAnimating)return;if(!$('gachaCinematic').classList.contains('gacha-show-prize'))gachaReveal();else gachaClose()});
-  $('missionBtn').addEventListener('click',openMissions);$('missionCloseX').addEventListener('click',()=> $('missionModal').classList.add('hidden'));$('attendanceClaim').addEventListener('click',claimAttendance);$('dailyMissionTab').addEventListener('click',()=>{missionTab='daily';renderMissions()});$('weeklyMissionTab').addEventListener('click',()=>{missionTab='weekly';renderMissions()});for(const [tab,suffix] of Object.entries({cats:'Cats',extras:'Extras'}))$('shopTab'+suffix).addEventListener('click',()=>selectShopTab(tab));$('shopBtn').addEventListener('click',showShop);const closeShop=()=> $('shopModal').classList.add('hidden');$('closeShopBtn').addEventListener('click',closeShop);$('shopCloseX').addEventListener('click',closeShop);$('purchaseAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.buyRemoveAds?.());$('restoreAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.restorePurchases?.());$('rewardHintBtn').addEventListener('click',rewardHints);window.NyangdokuAds?.isAdFree?.();
+  $('missionBtn').addEventListener('click',openMissions);$('missionCloseX').addEventListener('click',()=> $('missionModal').classList.add('hidden'));$('attendanceClaim').addEventListener('click',claimAttendance);$('dailyMissionTab').addEventListener('click',()=>{missionTab='daily';renderMissions()});$('weeklyMissionTab').addEventListener('click',()=>{missionTab='weekly';renderMissions()});for(const [tab,suffix] of Object.entries({cats:'Cats',dex:'Dex',extras:'Extras'}))$('shopTab'+suffix).addEventListener('click',()=>selectShopTab(tab));$('shopBtn').addEventListener('click',showShop);const closeShop=()=> $('shopModal').classList.add('hidden');$('closeShopBtn').addEventListener('click',closeShop);$('shopCloseX').addEventListener('click',closeShop);$('purchaseAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.buyRemoveAds?.());$('restoreAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.restorePurchases?.());$('rewardHintBtn').addEventListener('click',rewardHints);window.NyangdokuAds?.isAdFree?.();
   $('hintBtn').addEventListener('click',getHint);$('undoBtn').addEventListener('click',()=>{if(stageFailed||clearPending)return;runStart();const move=undoHistory.pop();if(!move){showToast('되돌릴 기록이 없다냥!');return}cells[move.i]=move.previous;drawCell(move.i);gameCellFeedback(move.i,'undo');gameTone('undo');saveBoard();validate();$('caption').textContent='마지막 입력을 되돌렸다냥!'});$('modalButton').addEventListener('click',advanceModal);$('gameCloseX').addEventListener('click',()=>{if(tutorialStep>=0){tutorialStep=-1;save.tutorialDone=true;persist();$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modal').classList.add('hidden');return}advanceModal()});$('settingsBtn').addEventListener('click',openSettings);
   $('settingsClose').addEventListener('click',closeSettings);
   const settingsControls={Sound:'sound',Vibration:'vibration',Animation:'animation',Timer:'timer',Errors:'errors',Accessible:'accessible',Dark:'dark'};
