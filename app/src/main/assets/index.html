@@ -71,6 +71,7 @@
         <div class="shop-wallet"><span>내 보유 코인</span><strong>🐟 <b id="shopCoins">0</b></strong></div>
         <nav class="shop-tabs" aria-label="상점 카테고리">
           <button type="button" class="active" id="shopTabCats" aria-selected="true">고양이</button>
+          <button type="button" id="shopTabDex" aria-selected="false">도감</button>
           <button type="button" id="shopTabExtras" aria-selected="false">기타</button>
         </nav>
         <div class="shop-scroll">
@@ -85,6 +86,13 @@
             </div>
             <h3 class="collection-heading">내 고양이 컬렉션 <span id="catCollectionCount"></span></h3>
             <div class="cat-slots" id="catShopGrid"></div>
+          </section>
+          <section id="shopPanelDex" class="shop-panel hidden">
+            <div class="dex-overview"><h3>냥이 도감</h3><p>모은 냥이들을 등급별로 확인해 봐!</p><div class="dex-total" id="dexTotal"></div></div>
+            <div class="dex-filters" id="dexFilters" role="group" aria-label="도감 등급 선택"></div>
+            <div class="dex-section-heading" id="dexSectionHeading"></div>
+            <div class="dex-grid" id="dexGrid"></div>
+            <p class="dex-help">미획득 스킨은 실루엣으로 표시돼. 뽑기로 모아보자!</p>
           </section>
           <section id="shopPanelExtras" class="shop-panel hidden"><h3>편의 기능</h3><p class="shop-section-description">광고 및 구매 관리는 이곳에서 할 수 있어.</p><button id="rewardHintBtn">광고 보고 힌트 +2</button><button id="purchaseAdsBtn">광고 제거 영구 구매 · ₩3,900</button><button id="restoreAdsBtn">구매 복원</button><p class="shop-footnote">광고 제거 구매 시 한 판에 한 번 무료 힌트 2개를 받을 수 있어.</p></section>
         </div>
