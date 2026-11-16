@@ -125,7 +125,8 @@
     {id:'wildgray',name:'야생냥이',price:1,file:'wildgray.png'},
     {id:'tiger',name:'호랑이',price:1,file:'tiger.png'},
     {id:'lion',name:'사자',price:1,file:'lion.png'},
-    {id:'leopard',name:'표범',price:1,file:'leopard.png'}
+    {id:'leopard',name:'표범',price:1,file:'leopard.png'},
+    {id:'tuxedo',name:'턱시도냥이',price:1,file:'tuxedo.png'}
   ];
   // Rarity weights apply only to tiers that have actual skins in the catalog.
   // Adding a skin with rarity:'rare'/'epic'/'legendary' activates that tier.
