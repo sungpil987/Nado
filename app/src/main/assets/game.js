@@ -163,11 +163,10 @@
   // Adding a skin with rarity:'rare'/'epic'/'legendary' activates that tier.
   const rarityConfig={
     common:{label:'일반',weight:70},
-    rare:{label:'희귀',weight:20},
     epic:{label:'영웅',weight:8},
     legendary:{label:'전설',weight:2}
   };
-  const GACHA_COST=100,GACHA_DUPLICATE_REFUND=40;
+  const GACHA_COST=1,GACHA_DUPLICATE_REFUND=0;
   catCatalog.forEach(cat=>{cat.rarity=cat.rarity||'common'});
   function gachaPool(){return catCatalog.filter(cat=>rarityConfig[cat.rarity])}
   function gachaTierRates(){
@@ -195,7 +194,7 @@
     $('gachaPrizeImage').alt=cat.name;
     $('gachaPrizeRarity').textContent=rarityConfig[cat.rarity].label+' 등급';
     $('gachaPrizeName').textContent=cat.name;
-    $('gachaPrizeMessage').textContent=duplicate?`중복 보상 · 🐟 ${GACHA_DUPLICATE_REFUND}코인 환급`:'새로운 고양이 획득!';
+    $('gachaPrizeMessage').textContent=duplicate?'중복 획득!':'새로운 고양이 획득!';
     $('gachaCinematicButton').textContent='확인';
     gameTone(cat.rarity==='epic'||cat.rarity==='legendary'?'win':'cat');
     vibrateGame(cat.rarity==='epic'||cat.rarity==='legendary'?'win':'cat');
@@ -221,7 +220,7 @@
     const info=document.createElement('div');
     const label=document.createElement('small');label.textContent=rarityConfig[cat.rarity].label+' 등급';
     const name=document.createElement('strong');name.textContent=cat.name;
-    const message=document.createElement('p');message.textContent=duplicate?`중복 획득! 🐟 ${GACHA_DUPLICATE_REFUND}코인 환급`:'새로운 고양이 획득!';
+    const message=document.createElement('p');message.textContent=duplicate?'중복 획득!':'새로운 고양이 획득!';
     info.append(label,name,message);result.append(image,info);
     gachaPending={cat,duplicate};gachaAnimating=true;
     const stage=$('gachaCinematic');
@@ -246,26 +245,9 @@
   const selectedCat=()=>catCatalog.find(x=>x.id===save.equippedCat);
   const catImage=()=>selectedCat()?.file||'cat.png';
   function renderCatShop(){
-    const grid=$('catShopGrid');grid.innerHTML='';
-    const all=[{id:'default',name:'기본 냥이',file:'cat.png',rarity:'common'},...catCatalog];
-    $('catCollectionCount').textContent=`${all.filter(cat=>save.ownedCats.includes(cat.id)).length}/${all.length}`;
     const rates=gachaTierRates();
     $('gachaRates').innerHTML=rates.map(tier=>`<span class="gacha-rate rarity-${tier.tier}">${tier.label} ${Number(tier.percent.toFixed(2))}%</span>`).join('');
     $('gachaPullBtn').disabled=save.coins<GACHA_COST;
-    for(const cat of all){
-      const owned=save.ownedCats.includes(cat.id),equipped=save.equippedCat===cat.id;
-      const card=document.createElement('div');
-      card.className='cat-product'+(equipped?' equipped':'')+(!owned?' cat-locked':'');
-      const img=document.createElement('img');img.src=cat.file;img.alt=cat.name;img.onerror=()=>{img.onerror=null;img.src='cat.png'};
-      const title=document.createElement('strong');title.textContent=owned?cat.name:'???';
-      const rarity=document.createElement('span');rarity.textContent=(rarityConfig[cat.rarity]?.label||'일반')+' · '+(equipped?'장착 중':owned?'보유 중':'미획득');
-      const btn=document.createElement('button');btn.textContent=equipped?'장착 완료':owned?'장착하기':'뽑기로 획득';
-      btn.disabled=equipped||!owned;
-      if(owned&&!equipped)btn.addEventListener('click',()=>{
-        save.equippedCat=cat.id;persist();renderCatShop();renderCatAppearance();showToast(`${cat.name} 장착 완료다냥!`);
-      });
-      card.append(img,title,rarity,btn);grid.appendChild(card);
-    }
   }
   let dexFilter='all';
   function renderCatDex(){
@@ -274,7 +256,7 @@
     const total=all.filter(owned).length;
     $('dexTotal').textContent=`전체 수집 ${total} / ${all.length} · ${Math.round(total/all.length*100)}%`;
     const filters=$('dexFilters');filters.innerHTML='';
-    for(const tier of ['all','common','rare','epic','legendary']){
+    for(const tier of ['all','common','epic','legendary']){
       const members=tier==='all'?all:all.filter(cat=>cat.rarity===tier);
       const count=members.filter(owned).length;
       const btn=document.createElement('button');
