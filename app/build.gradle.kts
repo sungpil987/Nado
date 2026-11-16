@@ -21,8 +21,8 @@ android {
         applicationId = "com.sungpil987.nyangdoku"
         minSdk = 24
         targetSdk = 35
-        versionCode = 26
-        versionName = "1.1.0"
+        versionCode = 27
+        versionName = "1.1.1"
     }
 }
 
