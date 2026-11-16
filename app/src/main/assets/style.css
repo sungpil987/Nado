@@ -225,3 +225,38 @@ body.dark-mode .calendar-day:not(.selected):not(.completed):not(.future){color:#
 body.dark-mode .daily-start-panel{background:#273247}
 body.dark-mode .daily-difficulty,body.dark-mode #dailySelectedLabel{color:#d7e6fc}
 body.dark-mode .settings-dialog{background:#222c3a}
+
+/* v1.1.1 dark theme contrast repair: override legacy light theme rules */
+html:has(body.dark-mode){background:#111823;color-scheme:dark}
+body.dark-mode,body.dark-mode .app{background:#111823!important;color:#edf3fb!important}
+body.dark-mode .topbar,body.dark-mode .progress,body.dark-mode .game-area,body.dark-mode .actions,body.dark-mode footer{background:transparent!important}
+body.dark-mode .eyebrow{color:#a8c5e9!important;text-shadow:none!important;-webkit-text-stroke:0!important}
+body.dark-mode .heading h1,body.dark-mode #screenHeading{color:#f5f7fd!important;text-shadow:none!important;-webkit-text-stroke:0!important}
+body.dark-mode .score,body.dark-mode .score>span,body.dark-mode .score>b,body.dark-mode #score{color:#d6e3f6!important;text-shadow:none!important;-webkit-text-stroke:0!important}
+body.dark-mode .app .coin-count,body.dark-mode .app .coin-count b,body.dark-mode #coins{color:#ffd27b!important;text-shadow:none!important}
+body.dark-mode .hearts{color:#fa879d!important}
+body.dark-mode .cat-chip{background:#263449!important;border:1px solid #40526a!important;box-shadow:0 3px 14px #0003!important}
+body.dark-mode .cat-chip span,body.dark-mode #mood{color:#f2f4fa!important;text-shadow:none!important;-webkit-text-stroke:0!important}
+body.dark-mode .topbar .round{background:#263449!important;color:#f1f6ff!important;box-shadow:0 3px 12px #0004!important}
+body.dark-mode .run-timer{background:#263449!important;color:#d9e4f4!important;border:1px solid #42516a!important}
+body.dark-mode .run-timer strong,body.dark-mode #runTimerValue{color:#fff!important}
+body.dark-mode .pause-button{background:#3b5374!important;color:#f6f9ff!important}
+body.dark-mode .board-wrap{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+body.dark-mode .board{background:#344155!important}
+body.dark-mode .caption,body.dark-mode #caption,body.dark-mode .app>footer,body.dark-mode #levelInfo{color:#c9d7e9!important;text-shadow:none!important;-webkit-text-stroke:0!important}
+body.dark-mode .caption .dot{background:#7daef0!important}
+body.dark-mode .action,body.dark-mode .action.hint,body.dark-mode .app .action.hint{background:#263449!important;color:#f2f6ff!important;border:1px solid #40526a!important;box-shadow:0 3px 12px #0003!important}
+body.dark-mode .action small,body.dark-mode .action>span,body.dark-mode .action.hint small{color:#f2f6ff!important;text-shadow:none!important}
+body.dark-mode .action.hint small b{background:#8b6930!important;color:#fff!important}
+body.dark-mode .mode-switch button{color:#9cc5ff!important}
+body.dark-mode .settings-dialog,body.dark-mode .profile-dialog,body.dark-mode .pause-dialog{background:#222d3c!important;color:#f3f7ff!important}
+body.dark-mode .settings-row,body.dark-mode .settings-link{color:#f3f7ff!important}
+body.dark-mode .settings-row small,body.dark-mode .settings-volume,body.dark-mode .settings-version{color:#bac8d9!important}
+body.dark-mode .profile-stat,body.dark-mode .profile-record-row{background:#303d50!important;color:#edf3fc!important}
+body.dark-mode .profile-stat small,body.dark-mode .profile-record-row span{color:#d4dfed!important}
+body.dark-mode .daily-calendar-wrap,body.dark-mode .daily-screen{background:#151d29!important}
+body.dark-mode .weekdays{color:#b9c7da!important}
+body.dark-mode .calendar-day:not(.selected):not(.completed):not(.future){color:#edf3fc!important}
+body.dark-mode .calendar-day.future{color:#677487!important}
+body.dark-mode .daily-start-panel{background:#263449!important}
+body.dark-mode .daily-start-panel #dailySelectedLabel,body.dark-mode .daily-start-panel .daily-difficulty{color:#e7f0ff!important}
