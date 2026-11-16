@@ -93,8 +93,14 @@
   }
   function saveSettings(){localStorage.setItem('nyangdoku-settings-v1',JSON.stringify(preferences));applySettings()}
   function vibrateGame(kind){
-    if(!preferences.vibration||!navigator.vibrate)return;
-    try{navigator.vibrate(kind==='wrong'?[45,35,65]:kind==='win'?[30,45,60]:12)}catch{}
+    if(!preferences.vibration)return;
+    try{
+      if(window.NyangdokuAds&&typeof window.NyangdokuAds.vibrate==='function'){
+        window.NyangdokuAds.vibrate(kind);
+      }else if(navigator.vibrate){
+        navigator.vibrate(kind==='wrong'?[35,45,55]:kind==='win'?[22,55,35]:kind==='cat'?24:12);
+      }
+    }catch{}
   }
   function openSettings(){
     runPause();
@@ -221,25 +227,11 @@
   }
   let xAudioContext=null,lastXSoundAt=0;
   function playXSound(){
-    if(!preferences.sound||preferences.volume<=0)return;
     const now=performance.now();
-    if(now-lastXSoundAt<75)return;
+    if(now-lastXSoundAt<90)return;
     lastXSoundAt=now;
-    try{
-      const AudioContextType=window.AudioContext||window.webkitAudioContext;
-      if(!AudioContextType)return;
-      if(!xAudioContext)xAudioContext=new AudioContextType();
-      if(xAudioContext.state==='suspended')xAudioContext.resume().catch(()=>{});
-      const t=xAudioContext.currentTime,osc=xAudioContext.createOscillator(),gain=xAudioContext.createGain();
-      osc.type='sine';
-      osc.frequency.setValueAtTime(620,t);
-      osc.frequency.exponentialRampToValueAtTime(410,t+.055);
-      gain.gain.setValueAtTime(.0001,t);
-      gain.gain.exponentialRampToValueAtTime(.045*preferences.volume/100,t+.008);
-      gain.gain.exponentialRampToValueAtTime(.0001,t+.075);
-      osc.connect(gain);gain.connect(xAudioContext.destination);
-      osc.start(t);osc.stop(t+.08);
-    }catch{}
+    gameTone('x');
+    vibrateGame('x');
   }
   function animateXMark(i,added){
     const cell=$('board').children[i];
@@ -254,33 +246,33 @@
   function gameTone(kind){
     if(!preferences.sound||preferences.volume<=0)return;
     const now=performance.now();
-    if(now-lastGameSoundAt<65&&kind!=='wrong')return;
+    if(now-lastGameSoundAt<48&&kind!=='wrong'&&kind!=='win')return;
     lastGameSoundAt=now;
     try{
       const AudioContextType=window.AudioContext||window.webkitAudioContext;
       if(!AudioContextType)return;
       if(!xAudioContext)xAudioContext=new AudioContextType();
       if(xAudioContext.state==='suspended')xAudioContext.resume().catch(()=>{});
-      const ctx=xAudioContext,t=ctx.currentTime;
-      const tones={
-        cat:[[520,780,.12,.055],[780,980,.1,.035]],
-        wrong:[[240,125,.18,.075]],
-        undo:[[440,330,.08,.028]],
-        hint:[[620,900,.16,.042],[900,1240,.17,.032]],
-        win:[[523,659,.12,.04],[659,784,.13,.04],[784,1046,.22,.05]]
+      const ctx=xAudioContext,t=ctx.currentTime,master=preferences.volume/100;
+      // Soft, percussive synth notes with exponential decay instead of long beeps.
+      const notes={
+        x:[[680,410,0,.052,.018,'sine']],
+        cat:[[490,730,0,.105,.068,'sine'],[790,1030,.055,.12,.038,'sine']],
+        wrong:[[310,190,0,.17,.07,'triangle'],[215,135,.09,.19,.048,'triangle']],
+        undo:[[460,320,0,.085,.037,'sine']],
+        hint:[[740,970,0,.13,.038,'sine'],[990,1340,.095,.17,.04,'sine']],
+        win:[[523,523,0,.17,.055,'sine'],[659,659,.12,.18,.055,'sine'],[784,784,.24,.19,.058,'sine'],[1047,1047,.38,.38,.065,'sine']]
       };
-      let offset=0;
-      for(const [from,to,duration,volume] of tones[kind]||[]){
-        const osc=ctx.createOscillator(),gain=ctx.createGain(),at=t+offset;
-        osc.type=kind==='wrong'?'triangle':'sine';
+      for(const [from,to,delay,duration,volume,type] of notes[kind]||[]){
+        const osc=ctx.createOscillator(),gain=ctx.createGain(),at=t+delay;
+        osc.type=type;
         osc.frequency.setValueAtTime(from,at);
-        osc.frequency.exponentialRampToValueAtTime(to,at+duration);
+        if(from!==to)osc.frequency.exponentialRampToValueAtTime(to,at+duration*.72);
         gain.gain.setValueAtTime(.0001,at);
-        gain.gain.exponentialRampToValueAtTime(volume*preferences.volume/100,at+.012);
+        gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume*master),at+.008);
         gain.gain.exponentialRampToValueAtTime(.0001,at+duration);
         osc.connect(gain);gain.connect(ctx.destination);
-        osc.start(at);osc.stop(at+duration+.012);
-        offset+=duration*.72;
+        osc.start(at);osc.stop(at+duration+.015);
       }
     }catch{}
   }
@@ -376,7 +368,7 @@
   function showShop(){runPause();updateCoins();renderCatAppearance();$('shopModal').classList.remove('hidden');renderCatShop();updateShop();selectShopTab(shopTab);window.NyangdokuAds?.isAdFree?.()}
   function rewardHints(){if(rewardBusy)return;if(adFree){if(save.freeHintClaimed?.[rewardKey()]){showToast('이번 판 무료 힌트는 이미 받았어');return}save.freeHintClaimed ||= {};save.freeHintClaimed[rewardKey()]=true;save.hints+=2;persist();$('hints').textContent=save.hints;showToast('무료 힌트 2개 획득!');return}if(!window.NyangdokuAds?.showRewardedAd){showToast('Android 앱에서 이용할 수 있어');return}rewardBusy=true;window.NyangdokuAds.showRewardedAd('hint')}
   function getHint(){if(stageFailed||clearPending||isManuallyPaused())return;const options=puzzle.cats.map(([r,c])=>r*puzzle.n+c).filter(i=>cells[i]!==2);if(!options.length){showToast('이미 모든 고양이를 찾았다냥!');return}if(save.hints>0){runStart();runHintUsed=true;save.hints--;persist();$('hints').textContent=save.hints;revealHint();return}showToast('힌트가 없다냥! 상점에서 광고를 보고 충전하라냥!');showShop()}
-  function revealHint(){runHintUsed=true;runStart();const options=puzzle.cats.map(([r,c])=>r*puzzle.n+c).filter(i=>cells[i]!==2);if(!options.length){showToast('모든 고양이를 이미 찾았어!');return}const i=options[0];setCell(i,2);gameTone('hint');$('board').children[i]?.classList.add('hint-glow');setTimeout(()=>$('board').children[i]?.classList.remove('hint-glow'),1400);$('caption').textContent='빛나는 칸에 힌트 고양이가 나타났다냥!';showToast('힌트 고양이 발견!')}
+  function revealHint(){runHintUsed=true;runStart();const options=puzzle.cats.map(([r,c])=>r*puzzle.n+c).filter(i=>cells[i]!==2);if(!options.length){showToast('모든 고양이를 이미 찾았어!');return}const i=options[0];setCell(i,2);gameTone('hint');vibrateGame('hint');$('board').children[i]?.classList.add('hint-glow');setTimeout(()=>$('board').children[i]?.classList.remove('hint-glow'),1400);$('caption').textContent='빛나는 칸에 힌트 고양이가 나타났다냥!';showToast('힌트 고양이 발견!')}
   window.onRewardedAd=kind=>{rewardBusy=false;if(kind==='hint'){save.hints+=2;persist();$('hints').textContent=save.hints;showToast('힌트 2개 획득!')}else if(kind==='double'){save.score+=puzzle.n*100;persist();$('score').textContent=save.score;showToast('점수 두 배 보상을 받았어!')}};
   window.onAdUnavailable=()=>{rewardBusy=false;showToast('광고가 아직 준비되지 않았어. 잠시 후 다시 눌러줘')};
   $('pauseBtn').addEventListener('click',()=>isManuallyPaused()?closePause():openPause());
