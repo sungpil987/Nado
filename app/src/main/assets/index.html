@@ -29,6 +29,21 @@
       
     </section>
     <footer><span id="levelInfo">4 × 4 · 고양이 4마리</span></footer>
+    <div class="modal hidden" id="settingsModal"><div class="dialog settings-dialog"><button type="button" class="modal-close" id="settingsClose" aria-label="설정 닫기">×</button><h2>⚙ 환경설정</h2><p class="settings-subtitle">플레이 스타일을 내 마음대로</p>
+      <div class="settings-section">사운드 및 피드백</div>
+      <label class="settings-row"><span>🔊 <b>효과음</b><small>X, 고양이, 클리어 소리</small></span><input type="checkbox" id="settingSound" checked></label>
+      <label class="settings-volume"><span>효과음 크기</span><input type="range" id="settingVolume" min="0" max="100" step="5" value="65"><output id="settingVolumeValue">65%</output></label>
+      <label class="settings-row"><span>📳 <b>진동</b><small>정답 배치 및 실수 피드백</small></span><input type="checkbox" id="settingVibration" checked></label>
+      <label class="settings-row"><span>✨ <b>애니메이션</b><small>고양이, X, 클리어 연출</small></span><input type="checkbox" id="settingAnimation" checked></label>
+      <div class="settings-section">게임 플레이</div>
+      <label class="settings-row"><span>⏱ <b>타이머 표시</b><small>기록 측정은 계속 유지돼</small></span><input type="checkbox" id="settingTimer" checked></label>
+      <label class="settings-row"><span>❗ <b>실수 즉시 알림</b><small>틀린 고양이 표시 및 안내</small></span><input type="checkbox" id="settingErrors" checked></label>
+      <label class="settings-row"><span>🎨 <b>색약 친화 모드</b><small>색 구역에 숫자 기호 추가</small></span><input type="checkbox" id="settingAccessible"></label>
+      <label class="settings-row"><span>🌙 <b>다크 모드</b><small>어두운 화면으로 변경</small></span><input type="checkbox" id="settingDark"></label>
+      <div class="settings-section">게임 정보</div>
+      <button type="button" id="settingsRules" class="settings-link">📖 게임 규칙 다시 보기 <span>›</span></button>
+      <div class="settings-version">냥도쿠 v1.1.0 · 설정은 이 기기에 자동 저장</div>
+    </div></div>
     <div class="modal hidden" id="pauseModal"><div class="dialog pause-dialog"><div class="pause-symbol">Ⅱ</div><h2>일시정지</h2><p>타이머와 퍼즐을 잠시 멈췄어.</p><strong id="pauseElapsed">00:00</strong><button type="button" id="resumeBtn">▶ 계속 플레이</button><button type="button" id="pauseSwitchBtn" class="pause-secondary">일반 레벨로 돌아가기</button></div></div>
     <div class="modal hidden" id="profileModal"><div class="dialog profile-dialog"><button type="button" class="modal-close" id="profileClose" aria-label="프로필 닫기">×</button><div class="profile-avatar">🐱</div><h2>내 냥도쿠 기록</h2><p class="profile-subtitle">나만의 퍼즐 성장 기록</p><div id="profileStats" class="profile-stats"></div><h3>퍼즐 크기별 최고 기록</h3><div id="profileRecords" class="profile-records"></div><p class="profile-note">시간제한 없음 · 힌트 사용 기록은 별도 집계 · 기록은 이 기기에 저장</p></div></div>
     <div class="modal hidden" id="missionModal"><div class="dialog mission-dialog"><button type="button" class="modal-close" id="missionCloseX" aria-label="미션 닫기">×</button><h2>냥냥 미션</h2><p id="attendanceStatus">출석 확인 중이다냥!</p><button id="attendanceClaim">오늘의 출석 보상 받기</button><p id="missionStreak"></p><div class="mission-tabs"><button id="dailyMissionTab" class="active">일일 미션</button><button id="weeklyMissionTab">주간 미션</button></div><div id="missionList"></div></div></div>
