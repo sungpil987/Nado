@@ -170,3 +170,19 @@ body.has-custom-bg .app .round{background:#fff!important}
 .profile-note{font-size:11px;color:#9b7773;line-height:1.6}
 .record-result{margin:7px auto 10px;padding:10px;border-radius:12px;background:#fdf3d9;color:#9a6918;font:15px Jua,sans-serif}
 @media(max-width:370px){.topbar{grid-template-columns:minmax(65px,1fr) repeat(5,35px)!important;gap:3px!important}.topbar .round{width:34px;height:34px;font-size:17px}}
+
+/* v1.0.1 manual pause and quick mode switch */
+.run-timer{gap:8px}
+.run-timer strong{margin-left:auto;white-space:nowrap}
+.pause-button{border:0;background:#eef2fa;color:#365f9d;border-radius:9px;padding:8px 10px;font:13px Jua,sans-serif;white-space:nowrap;min-height:33px}
+.pause-button:active{transform:scale(.96)}
+.mode-switch{display:flex;justify-content:flex-end;margin:2px 4px 0}
+.mode-switch button{display:none;border:0;background:transparent;color:#3167aa;font:13px Jua,sans-serif;text-decoration:underline;padding:4px 7px}
+.pause-dialog{max-width:350px;text-align:center;padding:28px 24px!important}
+.pause-symbol{font-size:34px;color:#5388ce;margin-bottom:8px}
+.pause-dialog h2{margin:4px 0 6px}
+.pause-dialog p{font-size:14px;color:#7c8290}
+.pause-dialog strong{display:block;font:28px Jua,sans-serif;color:#3c4f6b;margin:15px 0}
+.pause-dialog button{display:block;width:100%;margin-top:9px}
+.pause-dialog .pause-secondary{background:#f1f4f9!important;color:#3b6093!important}
+@media(max-width:360px){.pause-button{font-size:11px;padding:7px}.run-timer strong{font-size:17px}}
