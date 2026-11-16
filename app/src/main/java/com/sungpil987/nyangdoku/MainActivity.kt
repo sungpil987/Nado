@@ -2,6 +2,11 @@ package com.sungpil987.nyangdoku
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import android.content.Context
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -235,7 +240,34 @@ class MainActivity : android.app.Activity() {
         )
     }
 
+    private fun playHaptic(kind: String) {
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            (getSystemService(Context.VIBRATOR_SERVICE) as Vibrator)
+        }
+        if (!vibrator.hasVibrator()) return
+        val timings = when (kind) {
+            "wrong" -> longArrayOf(0, 35, 45, 55)
+            "win" -> longArrayOf(0, 22, 55, 35)
+            "hint" -> longArrayOf(0, 25, 40, 25)
+            "cat" -> longArrayOf(0, 24)
+            "x" -> longArrayOf(0, 12)
+            else -> longArrayOf(0, 16)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createWaveform(timings, -1))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(timings, -1)
+        }
+    }
+
     private inner class AdsBridge {
+        @JavascriptInterface fun vibrate(kind: String) {
+            runOnUiThread { playHaptic(kind) }
+        }
         @JavascriptInterface fun buyRemoveAds() { runOnUiThread { purchaseRemoveAds() } }
         @JavascriptInterface fun restorePurchases() { runOnUiThread { queryOwnedPurchases() } }
         @JavascriptInterface fun isAdFree() { runOnUiThread { sendAdFreeStatus() } }
