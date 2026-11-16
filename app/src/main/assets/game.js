@@ -22,8 +22,34 @@
     runElapsed=runCurrentMs();runActive=false;runStartedAt=0;runTimerDraw();
     if(puzzle&&!clearPending&&!stageFailed)saveBoard();
   }
+  function isManuallyPaused(){return !$('pauseModal').classList.contains('hidden')}
+  function openPause(){
+    if(clearPending||stageFailed||isManuallyPaused())return;
+    runPause();
+    lastTap=null;pointerPath=null;
+    $('pauseElapsed').textContent=runTimeText(runCurrentMs());
+    $('pauseModal').classList.remove('hidden');
+    $('pauseBtn').textContent='▶ 계속';
+  }
+  function closePause(){
+    $('pauseModal').classList.add('hidden');
+    $('pauseBtn').textContent='Ⅱ 일시정지';
+    runTimerDraw();
+  }
+  function switchToStage(){
+    runPause();
+    closePause();
+    lastTap=null;pointerPath=null;
+    $('modal').classList.add('hidden');
+    $('dailyScreen').classList.add('hidden');
+    if(gameMode!=='stage'){
+      gameMode='stage';
+      dailyDateKey=null;
+      render();
+    }
+  }
   function runStart(){
-    if(runActive||clearPending||stageFailed||document.hidden||!$('profileModal').classList.contains('hidden')||!$('dailyScreen').classList.contains('hidden'))return;
+    if(runActive||clearPending||stageFailed||isManuallyPaused()||document.hidden||!$('profileModal').classList.contains('hidden')||!$('dailyScreen').classList.contains('hidden'))return;
     runStartedAt=Date.now();runActive=true;runTimerDraw();
   }
   function runReset(){
@@ -142,15 +168,15 @@
     }
     throw new Error('데일리 퍼즐 생성에 실패했다냥!');
   }
-  function render(){clearTimeout(clearTimer);clearPending=false;const isDaily=gameMode==='daily';puzzle=isDaily?dailyPuzzle(dailyDateKey):makePuzzle(save.level);cells=Array.from({length:puzzle.n*puzzle.n},()=>0);mistakes=isDaily?(save.dailyProgress[dailyDateKey]?.mistakes||0):(save.stageMistakes[save.level]||0);stageFailed=false;$('screenHeading').textContent=isDaily?'데일리 챌린지':`레벨 ${save.level}`;$('score').textContent=save.score;$('hints').textContent=save.hints;$('levelInfo').textContent=isDaily?`${dateLabel(dailyDateKey)} · ${puzzle.n} × ${puzzle.n} · 데일리 챌린지`:`${puzzle.n} × ${puzzle.n} · 힌트 고양이 ${puzzle.fixedCats.length}마리`;updateHearts();
+  function render(){closePause();$('switchModeBtn').style.display=gameMode==='daily'?'block':'none';$('pauseSwitchBtn').style.display=gameMode==='daily'?'block':'none';clearTimeout(clearTimer);clearPending=false;const isDaily=gameMode==='daily';puzzle=isDaily?dailyPuzzle(dailyDateKey):makePuzzle(save.level);cells=Array.from({length:puzzle.n*puzzle.n},()=>0);mistakes=isDaily?(save.dailyProgress[dailyDateKey]?.mistakes||0):(save.stageMistakes[save.level]||0);stageFailed=false;$('screenHeading').textContent=isDaily?'데일리 챌린지':`레벨 ${save.level}`;$('score').textContent=save.score;$('hints').textContent=save.hints;$('levelInfo').textContent=isDaily?`${dateLabel(dailyDateKey)} · ${puzzle.n} × ${puzzle.n} · 데일리 챌린지`:`${puzzle.n} × ${puzzle.n} · 힌트 고양이 ${puzzle.fixedCats.length}마리`;updateHearts();
     const board=$('board');board.innerHTML='';board.style.gridTemplateColumns=`repeat(${puzzle.n},minmax(0,1fr))`;board.style.gridTemplateRows=`repeat(${puzzle.n},minmax(0,1fr))`;board.style.gap=puzzle.n>=8?'3px':'5px';
     for(let i=0;i<puzzle.n*puzzle.n;i++){const r=Math.floor(i/puzzle.n),c=i%puzzle.n,el=document.createElement('button');el.className=`cell ${regionColor[puzzle.regions[i]%colors]}`;el.setAttribute('role','gridcell');el.setAttribute('aria-label',`행 ${r+1}, 열 ${c+1}`);el.dataset.i=i;board.appendChild(el)}
     puzzle.fixedCats.forEach(([r,c])=>{const i=r*puzzle.n+c;cells[i]=2;drawCell(i);$('board').children[i].classList.add('locked');$('board').children[i].setAttribute('aria-label',`행 ${r+1}, 열 ${c+1}, 고정 힌트 고양이`)});
     undoHistory=[];runReset();const progress=save.boardProgress?.[progressKey()];if(progress?.signature===puzzleSignature(puzzle)&&Array.isArray(progress.cells)&&progress.cells.length===cells.length){const locked=new Set(puzzle.fixedCats.map(([r,c])=>r*puzzle.n+c));if(progress.cells.every((v,i)=>(v===0||v===1||v===2)&&(!locked.has(i)||v===2))){cells=progress.cells.slice();undoHistory=Array.isArray(progress.undo)?progress.undo.filter(x=>Number.isInteger(x.i)&&x.i>=0&&x.i<cells.length&&!locked.has(x.i)&&[0,1,2].includes(x.previous)&&[0,1,2].includes(x.value)).slice(-150):[];cells.forEach((_,i)=>drawCell(i));runElapsed=Math.max(0,Number(progress.runElapsed)||0);runHintUsed=!!progress.runHintUsed;runTimerDraw()}}else if(progress){delete save.boardProgress[progressKey()]}
     requestAnimationFrame(()=>{board.style.height=`${board.clientWidth}px`});renderCatAppearance();$('caption').textContent='한 번 터치 X · 두 번 터치 고양이 · 드래그 X다냥!';persist();if(!save.tutorialDone)showTutorial();if(mistakes>=3)failStage();}
   function isFixed(i){return puzzle.fixedCats.some(([r,c])=>r*puzzle.n+c===i)}
-  function activateCell(i){if(stageFailed)return;if(isFixed(i)){showToast('이 고양이는 퍼즐에 있는 힌트야');return}const now=Date.now();if(lastTap&&lastTap.i===i&&now-lastTap.time<360){lastTap=null;setCell(i,2);return}lastTap={i,time:now};setCell(i,cells[i]===1?0:1)}
-  function paintCross(i){if(i<0||isFixed(i)||cells[i]===2||cells[i]===1)return;setCell(i,1,false)}
+  function activateCell(i){if(stageFailed||isManuallyPaused())return;if(isFixed(i)){showToast('이 고양이는 퍼즐에 있는 힌트야');return}const now=Date.now();if(lastTap&&lastTap.i===i&&now-lastTap.time<360){lastTap=null;setCell(i,2);return}lastTap={i,time:now};setCell(i,cells[i]===1?0:1)}
+  function paintCross(i){if(isManuallyPaused()||i<0||isFixed(i)||cells[i]===2||cells[i]===1)return;setCell(i,1,false)}
   function showWrongMove(i){
     const cell=$('board').children[i];
     if(!cell)return;
@@ -238,7 +264,7 @@
     setTimeout(()=>el.classList.remove(cls),360);
   }
   function setCell(i,value,check=true){
-    if(stageFailed||clearPending||mistakes>=3||isFixed(i))return;
+    if(stageFailed||clearPending||isManuallyPaused()||mistakes>=3||isFixed(i))return;
     runStart();
     const previous=cells[i];
     if(value===2&&previous===2)value=0;
@@ -272,7 +298,7 @@
   function failStage(){runPause();stageFailed=true;if(gameMode==='daily')save.dailyResults[dailyDateKey]={completed:false,mistakes,failed:true};$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modalTitle').textContent='기회가 끝났다냥!';$('modalText').textContent='세 번 실수했다냥. 같은 퍼즐에 다시 도전하라냥!';$('modalButton').textContent='다시 도전하냥';persist();$('modal').classList.remove('hidden')}
   function restartStage(){runReset();clearTimeout(clearTimer);clearPending=false;clearBoard();undoHistory=[];if(gameMode==='daily'){save.dailyProgress[dailyDateKey]={mistakes:0};delete save.dailyResults[dailyDateKey]}else save.stageMistakes[save.level]=0;persist();$('modal').classList.add('hidden');render();showToast('같은 퍼즐을 다시 시작했어')}
   function cellAtPoint(x,y){const el=document.elementFromPoint(x,y)?.closest('.cell');return el&&$('board').contains(el)?Number(el.dataset.i):-1}
-  function boardPointerDown(e){const el=e.target.closest('.cell');if(!el||pointerPath||stageFailed)return;e.preventDefault();const i=Number(el.dataset.i);pointerPath={id:e.pointerId,start:i,last:i,dragged:false};try{$('board').setPointerCapture(e.pointerId)}catch{}}
+  function boardPointerDown(e){const el=e.target.closest('.cell');if(!el||pointerPath||stageFailed||isManuallyPaused())return;e.preventDefault();const i=Number(el.dataset.i);pointerPath={id:e.pointerId,start:i,last:i,dragged:false};try{$('board').setPointerCapture(e.pointerId)}catch{}}
   function boardPointerMove(e){if(!pointerPath||stageFailed||pointerPath.id!==e.pointerId)return;const i=cellAtPoint(e.clientX,e.clientY);if(i<0||i===pointerPath.last)return;pointerPath.dragged=true;lastTap=null;paintCross(pointerPath.start);paintCross(pointerPath.last);paintCross(i);pointerPath.last=i}
   function boardPointerUp(e){if(!pointerPath||pointerPath.id!==e.pointerId)return;const state=pointerPath,i=cellAtPoint(e.clientX,e.clientY);pointerPath=null;if(state.dragged){paintCross(state.start);paintCross(state.last);if(i>=0)paintCross(i)}else activateCell(i>=0?i:state.start)}
   function drawCell(i){const el=$('board').children[i];el.innerHTML='';el.classList.remove('cat','error');if(cells[i]===1){drawMark(el)}else if(cells[i]===2){const img=document.createElement('img');img.src=catImage();img.alt='고양이';el.appendChild(img);el.classList.add('cat')}}
@@ -293,9 +319,9 @@
     for(let i=0;i<first;i++){const blank=document.createElement('span');blank.className='calendar-blank';grid.appendChild(blank)}for(let day=1;day<=days;day++){const key=`${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`,button=document.createElement('button');button.className='calendar-day';button.textContent=day;button.disabled=key>today;button.setAttribute('aria-label',`${y}년 ${m}월 ${day}일${save.dailyResults[key]?.completed?' 완료':''}`);if(key===selectedDateKey)button.classList.add('selected');if(save.dailyResults[key]?.completed){button.classList.add('completed');button.setAttribute('aria-label',`${y}년 ${m}월 ${day}일 도전 완료`)}if(key>today)button.classList.add('future');button.addEventListener('click',()=>{selectedDateKey=key;renderDailyCalendar()});grid.appendChild(button)}
     $('dailySelectedLabel').textContent=`${Number(selectedDateKey.slice(5,7))}/${Number(selectedDateKey.slice(8,10))}/${selectedDateKey.slice(2,4)}`;$('dailyDifficulty').textContent=`오늘의 도전 · ${save.dailyPuzzles[selectedDateKey]?.puzzle?.n||dailySize(selectedDateKey)}×${save.dailyPuzzles[selectedDateKey]?.puzzle?.n||dailySize(selectedDateKey)}`;$('dailyContinue').disabled=selectedDateKey>today;$('dailyContinue').textContent=save.dailyResults[selectedDateKey]?.completed?'완료 · 다시 도전':'계속하기';$('dailySelectedLabel').textContent+=save.dailyResults[selectedDateKey]?.completed?'  ✓ 완료':'';}
   function openDailyCalendar(){runPause();const today=seoulTodayKey();if(selectedDateKey>today)selectedDateKey=today;if(dailyMonthKey>today.slice(0,7))dailyMonthKey=today.slice(0,7);$('dailyScreen').classList.remove('hidden');renderDailyCalendar()}
-  function leaveCalendar(){ $('dailyScreen').classList.add('hidden');gameMode='stage';dailyDateKey=null;render() }
-  function goDailyCalendar(){ $('modal').classList.add('hidden');gameMode='stage';dailyDateKey=null;openDailyCalendar();render() }
-  function startDaily(){if(selectedDateKey>seoulTodayKey())return;dailyDateKey=selectedDateKey;gameMode='daily';$('dailyScreen').classList.add('hidden');$('modal').classList.add('hidden');render()}
+  function leaveCalendar(){runPause(); $('dailyScreen').classList.add('hidden');gameMode='stage';dailyDateKey=null;render() }
+  function goDailyCalendar(){runPause(); $('modal').classList.add('hidden');gameMode='stage';dailyDateKey=null;openDailyCalendar();render() }
+  function startDaily(){if(selectedDateKey>seoulTodayKey())return;runPause();dailyDateKey=selectedDateKey;gameMode='daily';$('dailyScreen').classList.add('hidden');$('modal').classList.add('hidden');render()}
   function shiftMonth(amount){const [y,m]=dailyMonthKey.split('-').map(Number),d=new Date(Date.UTC(y,m-1+amount,1));dailyMonthKey=`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;const days=monthLength(d.getUTCFullYear(),d.getUTCMonth()+1);selectedDateKey=`${dailyMonthKey}-${String(Math.min(days,amount>0?Number(seoulTodayKey().slice(-2)):days)).padStart(2,'0')}`;if(selectedDateKey>seoulTodayKey())selectedDateKey=seoulTodayKey();renderDailyCalendar()}
   function dailyInfo(){const toast=$('dailyInfoToast');toast.textContent='매일 9×9~12×12 랜덤 도전! 초록색 체크 날짜는 완료한 날이야.';toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2600)}
   const tutorialPages=[
@@ -320,14 +346,18 @@
   function selectShopTab(tab){shopTab=tab;const ids={cats:'Cats',extras:'Extras'};for(const [key,suffix] of Object.entries(ids)){const active=key===tab;$('shopTab'+suffix).classList.toggle('active',active);$('shopTab'+suffix).setAttribute('aria-selected',String(active));$('shopPanel'+suffix).classList.toggle('hidden',!active)}$('shopScrollTop')?.scrollTo?.({top:0,behavior:'instant'});const scroll=document.querySelector('.shop-scroll');if(scroll)scroll.scrollTop=0}
   function showShop(){runPause();updateCoins();renderCatAppearance();$('shopModal').classList.remove('hidden');renderCatShop();updateShop();selectShopTab(shopTab);window.NyangdokuAds?.isAdFree?.()}
   function rewardHints(){if(rewardBusy)return;if(adFree){if(save.freeHintClaimed?.[rewardKey()]){showToast('이번 판 무료 힌트는 이미 받았어');return}save.freeHintClaimed ||= {};save.freeHintClaimed[rewardKey()]=true;save.hints+=2;persist();$('hints').textContent=save.hints;showToast('무료 힌트 2개 획득!');return}if(!window.NyangdokuAds?.showRewardedAd){showToast('Android 앱에서 이용할 수 있어');return}rewardBusy=true;window.NyangdokuAds.showRewardedAd('hint')}
-  function getHint(){if(stageFailed||clearPending)return;const options=puzzle.cats.map(([r,c])=>r*puzzle.n+c).filter(i=>cells[i]!==2);if(!options.length){showToast('이미 모든 고양이를 찾았다냥!');return}if(save.hints>0){runStart();runHintUsed=true;save.hints--;persist();$('hints').textContent=save.hints;revealHint();return}showToast('힌트가 없다냥! 상점에서 광고를 보고 충전하라냥!');showShop()}
+  function getHint(){if(stageFailed||clearPending||isManuallyPaused())return;const options=puzzle.cats.map(([r,c])=>r*puzzle.n+c).filter(i=>cells[i]!==2);if(!options.length){showToast('이미 모든 고양이를 찾았다냥!');return}if(save.hints>0){runStart();runHintUsed=true;save.hints--;persist();$('hints').textContent=save.hints;revealHint();return}showToast('힌트가 없다냥! 상점에서 광고를 보고 충전하라냥!');showShop()}
   function revealHint(){runHintUsed=true;runStart();const options=puzzle.cats.map(([r,c])=>r*puzzle.n+c).filter(i=>cells[i]!==2);if(!options.length){showToast('모든 고양이를 이미 찾았어!');return}const i=options[0];setCell(i,2);gameTone('hint');$('board').children[i]?.classList.add('hint-glow');setTimeout(()=>$('board').children[i]?.classList.remove('hint-glow'),1400);$('caption').textContent='빛나는 칸에 힌트 고양이가 나타났다냥!';showToast('힌트 고양이 발견!')}
   window.onRewardedAd=kind=>{rewardBusy=false;if(kind==='hint'){save.hints+=2;persist();$('hints').textContent=save.hints;showToast('힌트 2개 획득!')}else if(kind==='double'){save.score+=puzzle.n*100;persist();$('score').textContent=save.score;showToast('점수 두 배 보상을 받았어!')}};
   window.onAdUnavailable=()=>{rewardBusy=false;showToast('광고가 아직 준비되지 않았어. 잠시 후 다시 눌러줘')};
+  $('pauseBtn').addEventListener('click',()=>isManuallyPaused()?closePause():openPause());
+  $('resumeBtn').addEventListener('click',closePause);
+  $('switchModeBtn').addEventListener('click',switchToStage);
+  $('pauseSwitchBtn').addEventListener('click',switchToStage);
   $('profileBtn').addEventListener('click',()=>{runPause();renderProfile();$('profileModal').classList.remove('hidden')});$('profileClose').addEventListener('click',()=>{$('profileModal').classList.add('hidden');runTimerDraw()});
   $('missionBtn').addEventListener('click',openMissions);$('missionCloseX').addEventListener('click',()=> $('missionModal').classList.add('hidden'));$('attendanceClaim').addEventListener('click',claimAttendance);$('dailyMissionTab').addEventListener('click',()=>{missionTab='daily';renderMissions()});$('weeklyMissionTab').addEventListener('click',()=>{missionTab='weekly';renderMissions()});for(const [tab,suffix] of Object.entries({cats:'Cats',extras:'Extras'}))$('shopTab'+suffix).addEventListener('click',()=>selectShopTab(tab));$('shopBtn').addEventListener('click',showShop);const closeShop=()=> $('shopModal').classList.add('hidden');$('closeShopBtn').addEventListener('click',closeShop);$('shopCloseX').addEventListener('click',closeShop);$('purchaseAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.buyRemoveAds?.());$('restoreAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.restorePurchases?.());$('rewardHintBtn').addEventListener('click',rewardHints);window.NyangdokuAds?.isAdFree?.();
   $('hintBtn').addEventListener('click',getHint);$('undoBtn').addEventListener('click',()=>{if(stageFailed||clearPending)return;runStart();const move=undoHistory.pop();if(!move){showToast('되돌릴 기록이 없다냥!');return}cells[move.i]=move.previous;drawCell(move.i);gameCellFeedback(move.i,'undo');gameTone('undo');saveBoard();validate();$('caption').textContent='마지막 입력을 되돌렸다냥!'});$('modalButton').addEventListener('click',advanceModal);$('gameCloseX').addEventListener('click',()=>{if(tutorialStep>=0){tutorialStep=-1;save.tutorialDone=true;persist();$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modal').classList.add('hidden');return}advanceModal()});$('settingsBtn').addEventListener('click',()=>showToast('진행 상황은 이 기기에 자동 저장돼'));
-  $('dailyBtn').addEventListener('click',openDailyCalendar);$('dailyBack').addEventListener('click',leaveCalendar);$('dailyContinue').addEventListener('click',startDaily);$('dailyInfo').addEventListener('click',dailyInfo);$('monthlyTrophyBtn').addEventListener('click',dailyInfo);$('prevMonth').addEventListener('click',()=>shiftMonth(-1));$('nextMonth').addEventListener('click',()=>shiftMonth(1));
+  $('dailyBtn').addEventListener('click',()=>{if(isManuallyPaused())closePause();openDailyCalendar()});$('dailyBack').addEventListener('click',leaveCalendar);$('dailyContinue').addEventListener('click',startDaily);$('dailyInfo').addEventListener('click',dailyInfo);$('monthlyTrophyBtn').addEventListener('click',dailyInfo);$('prevMonth').addEventListener('click',()=>shiftMonth(-1));$('nextMonth').addEventListener('click',()=>shiftMonth(1));
   const boardElement=$('board');boardElement.addEventListener('pointerdown',boardPointerDown);boardElement.addEventListener('pointermove',boardPointerMove);boardElement.addEventListener('pointerup',boardPointerUp);boardElement.addEventListener('pointercancel',()=>{pointerPath=null});
   const studioSplash=$('studioSplash');if(studioSplash){setTimeout(()=>{studioSplash.classList.add('studio-splash-out');setTimeout(()=>studioSplash.remove(),650)},1350)}
   setInterval(()=>{if(runActive)runTimerDraw()},250);document.addEventListener('visibilitychange',()=>{if(document.hidden)runPause()});window.addEventListener('pagehide',runPause);
