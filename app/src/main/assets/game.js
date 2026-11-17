@@ -177,7 +177,7 @@
   function gachaClose(){
     clearTimeout(gachaRevealTimer);clearTimeout(gachaFinishTimer);
     $('gachaCinematic').classList.add('hidden');
-    $('gachaCinematic').classList.remove('gacha-rare','gacha-epic','gacha-legendary','gacha-common','gacha-show-prize');
+    $('gachaCinematic').classList.remove('gacha-rare','gacha-epic','gacha-legendary','gacha-common','gacha-show-prize','gacha-revealed');
     gachaAnimating=false;gachaPending=null;
   }
   function gachaReveal(){
@@ -197,7 +197,7 @@
     $('gachaPrizeMessage').textContent=duplicate?'중복 획득!':'새로운 고양이 획득!';
     $('gachaCinematicButton').textContent='확인';
     gameTone(cat.rarity==='epic'||cat.rarity==='rare'?'win':'cat');
-    vibrateGame(cat.rarity==='epic'||cat.rarity==='legendary'?'win':'cat');
+    vibrateGame(cat.rarity==='epic'||cat.rarity==='rare'?'win':'cat');
   }
   function gachaDraw(){
     if(gachaAnimating)return;
