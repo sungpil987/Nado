@@ -116,12 +116,6 @@
   function validPlacement(placed){if(placed.length!==puzzle.n)return false;const rows=new Set(),cols=new Set(),regions=new Set();for(const [r,c,i] of placed){if(rows.has(r)||cols.has(c)||regions.has(puzzle.regions[i]))return false;rows.add(r);cols.add(c);regions.add(puzzle.regions[i])}for(let a=0;a<placed.length;a++)for(let b=a+1;b<placed.length;b++)if(Math.abs(placed[a][0]-placed[b][0])<=1&&Math.abs(placed[a][1]-placed[b][1])<=1)return false;return true}
   save.coins=Number.isFinite(save.coins)?save.coins:0;
   save.missions ||= {daily:{},weekly:{}};save.attendance ||= {claimed:{},streak:0,last:null};save.ownedCats ||= ['default'];save.equippedCat ||= 'default';
-  // Retire removed skins without deleting any other saved game progress.
-  const activeSkinIds=new Set(['default',...catCatalog.map(cat=>cat.id)]);
-  save.ownedCats=save.ownedCats.filter(id=>activeSkinIds.has(id));
-  if(!save.ownedCats.includes('default'))save.ownedCats.unshift('default');
-  if(!activeSkinIds.has(save.equippedCat))save.equippedCat='default';
-  persist();
   const catCatalog=[
     {id:'2_1',name:'치즈',file:'2_1.png',rarity:'common'},
     {id:'3_1',name:'코숏',file:'3_1.png',rarity:'common'},
@@ -167,6 +161,13 @@
     epic:{label:'영웅',weight:8}
   };
   const GACHA_COST=1,GACHA_DUPLICATE_REFUND=0;
+  // Retire removed skins without deleting any other saved game progress.
+  const activeSkinIds=new Set(['default',...catCatalog.map(cat=>cat.id)]);
+  save.ownedCats=save.ownedCats.filter(id=>activeSkinIds.has(id));
+  if(!save.ownedCats.includes('default'))save.ownedCats.unshift('default');
+  if(!activeSkinIds.has(save.equippedCat))save.equippedCat='default';
+  persist();
+
   function gachaPool(){return catCatalog.filter(cat=>rarityConfig[cat.rarity])}
   function gachaTierRates(){
     const pool=gachaPool(),tiers=Object.entries(rarityConfig).filter(([tier])=>pool.some(cat=>cat.rarity===tier));
