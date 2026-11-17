@@ -20,9 +20,9 @@ android {
     defaultConfig {
         applicationId = "com.sungpil987.nyangdoku"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 40
-        versionName = "1.3.4"
+        targetSdk = 36
+        versionCode = 41
+        versionName = "1.3.5"
     }
 }
 
