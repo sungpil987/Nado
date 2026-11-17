@@ -406,14 +406,20 @@
     const n=dailySize(dateKey),tier=n-9,clueCount=n<=10?1:2;
     const seedBase=parseInt(stageHash(`${dateKey}|${n}|daily-v7-hard`).slice(0,8),16)>>>0;
     const used=new Set(save.seenStageKeys),previous=save.dailyPuzzles[shiftDate(dateKey,-1)]?.puzzle;
+    let best=null,accepted=0;
     for(let attempt=0;attempt<512;attempt++){
       const seed=(seedBase+Math.imul(attempt+1,0x9E3779B1))>>>0;
       const candidate=makeCandidate(n,clueCount,seed);
       if(!candidate||sameSolution(candidate,previous))continue;
       const key=stageHash(`daily|${n}|${candidate.solution.join('')}|${candidate.regions.join('')}|${candidate.fixedCats.map(([r,c])=>r*n+c).join('.')}`);
       if(used.has(key))continue;
-      save.dailyPuzzles[dateKey]={puzzle:candidate,tier,key};
-      save.seenStageKeys.push(key);persist();return candidate;
+      const quality=puzzleQuality(candidate);
+      if(!best||quality.score>best.quality.score)best={candidate,key,quality};
+      if(++accepted>=12||quality.solved&&accepted>=4)break;
+    }
+    if(best){
+      save.dailyPuzzles[dateKey]={puzzle:best.candidate,tier,key:best.key};
+      save.seenStageKeys.push(best.key);persist();return best.candidate;
     }
     for(let clues=clueCount+1;clues<=n;clues++){
       for(let attempt=0;attempt<512;attempt++){
