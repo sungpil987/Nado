@@ -21,13 +21,13 @@ android {
         applicationId = "com.sungpil987.nyangdoku"
         minSdk = 24
         targetSdk = 36
-        versionCode = 41
-        versionName = "1.3.5"
+        versionCode = 42
+        versionName = "1.3.6"
     }
 }
 
 dependencies {
     implementation("com.google.android.gms:play-services-ads:25.5.0")
     implementation("com.google.android.ump:user-messaging-platform:3.2.0")
-    implementation("com.android.billingclient:billing-ktx:7.1.1")
+    implementation("com.android.billingclient:billing-ktx:8.0.0")
 }
