@@ -311,11 +311,83 @@
   function solveRows(n,rng){const cols=[];function dfs(r){if(r===n)return true;for(const c of shuffle(Array.from({length:n},(_,i)=>i),rng)){if(cols.includes(c)||(r&&Math.abs(cols[r-1]-c)<=1))continue;cols[r]=c;if(dfs(r+1))return true;cols.pop()}return false}return dfs(0)?cols.slice():null}
   function countSolutions(n,regions,fixedCats){const fixed=Array(n).fill(-1),usedColumns=Array(n).fill(false),usedRegions=Array(n).fill(false),chosen=[];fixedCats.forEach(([r,c])=>fixed[r]=c);let found=0;function visit(r){if(found>1)return;if(r===n){found++;return}const candidates=fixed[r]>=0?[fixed[r]]:Array.from({length:n},(_,c)=>c);for(const c of candidates){const region=regions[r*n+c];if(usedColumns[c]||usedRegions[region]||(r&&Math.abs(chosen[r-1]-c)<=1))continue;usedColumns[c]=true;usedRegions[region]=true;chosen[r]=c;visit(r+1);usedColumns[c]=false;usedRegions[region]=false;if(found>1)return}}visit(0);return found}
   function makeCandidate(n,clueCount,seed){const rng=seededRandom(seed),solution=solveRows(n,rng);if(!solution)return null;const cats=solution.map((c,r)=>[r,c]),biases=Array.from({length:n},()=>rng()*2.8-1.4),regions=Array.from({length:n*n},(_,idx)=>{const r=Math.floor(idx/n),c=idx%n;let best=Infinity,chosen=0;for(let i=0;i<n;i++){const d=(cats[i][0]-r)**2+(cats[i][1]-c)**2+biases[i];if(d<best){best=d;chosen=i}}return chosen});cats.forEach(([r,c],i)=>regions[r*n+c]=i);const palette=shuffle(Array.from({length:n},(_,i)=>i),rng),coloredRegions=regions.map(x=>palette[x]),rows=shuffle(Array.from({length:n},(_,i)=>i),rng).slice(0,clueCount).sort((a,b)=>a-b),fixedCats=rows.map(r=>[r,solution[r]]);if(countSolutions(n,coloredRegions,fixedCats)!==1)return null;return {n,solution,regions:coloredRegions,cats,fixedCats}}
+  // Evaluate region balance and whether players can make forced deductions without guessing.
+  function puzzleQuality(p){
+    const n=p.n,regions=p.regions,counts=Array(n).fill(0),edges=Array(n).fill(0);
+    for(let i=0;i<n*n;i++){
+      const k=regions[i];counts[k]++;
+      const row=Math.floor(i/n),col=i%n;
+      if(row===0||regions[i-n]!==k)edges[k]++;
+      if(row===n-1||regions[i+n]!==k)edges[k]++;
+      if(col===0||regions[i-1]!==k)edges[k]++;
+      if(col===n-1||regions[i+1]!==k)edges[k]++;
+    }
+    const area=n,imbalance=counts.reduce((v,c)=>v+Math.abs(c-area),0)/n;
+    const perimeter=edges.reduce((v,e)=>v+e,0)/(n*n);
+    const chosen=new Map(p.fixedCats.map(([row,col])=>[row,col]));
+    let steps=0;
+    for(let turn=0;turn<n;turn++){
+      const options=Array.from({length:n},()=>[]);
+      const usedCols=new Set(chosen.values()),usedRegions=new Set([...chosen].map(([row,col])=>regions[row*n+col]));
+      for(let row=0;row<n;row++){
+        if(chosen.has(row))continue;
+        for(let col=0;col<n;col++){
+          const region=regions[row*n+col];
+          if(usedCols.has(col)||usedRegions.has(region))continue;
+          if(chosen.has(row-1)&&Math.abs(chosen.get(row-1)-col)<=1)continue;
+          if(chosen.has(row+1)&&Math.abs(chosen.get(row+1)-col)<=1)continue;
+          options[row].push(col);
+        }
+      }
+      let forced=null;
+      for(let row=0;row<n;row++)if(!chosen.has(row)&&options[row].length===1){forced=[row,options[row][0]];break}
+      if(!forced){
+        for(let col=0;col<n&&!forced;col++){
+          if(usedCols.has(col))continue;
+          const cells=[];for(let row=0;row<n;row++)if(options[row].includes(col))cells.push([row,col]);
+          if(cells.length===1)forced=cells[0];
+        }
+      }
+      if(!forced){
+        for(let region=0;region<n&&!forced;region++){
+          if(usedRegions.has(region))continue;
+          const cells=[];for(let row=0;row<n;row++)for(const col of options[row])if(regions[row*n+col]===region)cells.push([row,col]);
+          if(cells.length===1)forced=cells[0];
+        }
+      }
+      if(!forced)break;
+      chosen.set(forced[0],forced[1]);steps++;
+    }
+    return {steps,solved:chosen.size===n,score:steps*6-imbalance*2-perimeter*3};
+  }
   function sameSolution(a,b){return !!a&&!!b&&a.n===b.n&&a.solution.every((v,i)=>v===b.solution[i])}
-  function makePuzzle(level){if(validPuzzle(save.stageCache[level]))return save.stageCache[level];delete save.stageCache[level];const n=levelSize(level),used=new Set(save.seenStageKeys),savedAttempt=save.stageAttempts[level],previous=save.stageCache[level-1];let fallback=null;
-    for(let attempt=0;attempt<512;attempt++){if(savedAttempt!==undefined&&attempt!==savedAttempt)continue;const seed=(Math.imul(level,0x9E3779B1)^Math.imul(attempt+1,0x85EBCA77))>>>0,clueCount=stageClues(level),candidate=makeCandidate(n,clueCount,seed);if(!candidate||sameSolution(candidate,previous))continue;const key=stageHash(`${n}|${candidate.solution.join('')}|${candidate.regions.join('')}|${candidate.fixedCats.map(([r,c])=>r*n+c).join('.')}`);if(!fallback)fallback={candidate,attempt,key};if(savedAttempt!==undefined||!used.has(key)){storeStage(level,attempt,key,candidate);return candidate}}
-    if(fallback){storeStage(level,fallback.attempt,fallback.key,fallback.candidate);return fallback.candidate}
-    for(let clues=stageClues(level)+1;clues<=n;clues++)for(let attempt=0;attempt<512;attempt++){const seed=(Math.imul(level,0x9E3779B1)^Math.imul(attempt+1,0x85EBCA77))>>>0,candidate=makeCandidate(n,clues,seed);if(candidate){const key=stageHash(`recovery|${level}|${clues}|${attempt}`);storeStage(level,attempt,key,candidate);return candidate}}
+  function makePuzzle(level){
+    if(validPuzzle(save.stageCache[level]))return save.stageCache[level];
+    delete save.stageCache[level];
+    const n=levelSize(level),used=new Set(save.seenStageKeys),previous=save.stageCache[level-1];
+    const clueCount=stageClues(level);
+    let best=null,accepted=0;
+    for(let attempt=0;attempt<512;attempt++){
+      const seed=(Math.imul(level,0x9E3779B1)^Math.imul(attempt+1,0x85EBCA77))>>>0;
+      const candidate=makeCandidate(n,clueCount,seed);
+      if(!candidate||sameSolution(candidate,previous))continue;
+      const key=stageHash(`${n}|${candidate.solution.join('')}|${candidate.regions.join('')}|${candidate.fixedCats.map(([r,c])=>r*n+c).join('.')}`);
+      if(used.has(key))continue;
+      const quality=puzzleQuality(candidate);
+      if(!best||quality.score>best.quality.score)best={candidate,attempt,key,quality};
+      if(++accepted>=16||quality.solved&&accepted>=5)break;
+    }
+    if(best){storeStage(level,best.attempt,best.key,best.candidate);return best.candidate}
+    // Preserve playability if the intended clue count is too difficult to generate.
+    for(let clues=clueCount+1;clues<=n;clues++){
+      for(let attempt=0;attempt<512;attempt++){
+        const seed=(Math.imul(level,0x9E3779B1)^Math.imul(attempt+1,0x85EBCA77))>>>0;
+        const candidate=makeCandidate(n,clues,seed);
+        if(!candidate)continue;
+        const key=stageHash(`recovery-v8|${level}|${clues}|${attempt}`);
+        storeStage(level,attempt,key,candidate);return candidate;
+      }
+    }
     throw new Error('유일한 정답을 가진 퍼즐을 생성하지 못했어냥!')
   }
   function storeStage(level,attempt,key,candidate){save.stageAttempts[level]=attempt;if(!save.seenStageKeys.includes(key))save.seenStageKeys.push(key);save.stageCache[level]=candidate;for(const k of Object.keys(save.stageCache))if(Math.abs(Number(k)-level)>12)delete save.stageCache[k];persist()}
