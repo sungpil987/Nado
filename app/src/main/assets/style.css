@@ -395,3 +395,13 @@ body.dark-mode .shop-v2 .dex-filter.active{background:#526990}
 .fish-icon{display:inline-block;width:1.25em;height:1.25em;object-fit:contain;vertical-align:-.24em;image-rendering:pixelated}
 .profile-avatar img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
 .trophy-display .trophy-image{display:block;width:min(55vw,210px);height:min(55vw,210px);max-width:100%;object-fit:contain;margin:auto;image-rendering:pixelated}
+
+/* v1.3.2: larger legible uploaded icons, preserving tap targets */
+.app>.topbar .round{display:grid;place-items:center;overflow:visible;padding:0;min-width:0}
+.app>.topbar .round .ui-icon{width:100%;height:100%;max-width:none;max-height:none;object-fit:contain;image-rendering:pixelated;transform:scale(1.32);transform-origin:center;pointer-events:none}
+.action.hint>span{display:grid;place-items:center;width:44px;height:44px;flex:none}
+.action.hint .ui-icon{width:44px;height:44px;max-width:none;max-height:none;object-fit:contain;transform:scale(1.32);pointer-events:none}
+.coin-count .fish-icon,.shop-wallet .fish-icon{width:2.05em;height:2.05em;vertical-align:-.58em;margin-right:-.2em;image-rendering:pixelated}
+.gacha-pull .fish-icon{width:1.65em;height:1.65em;vertical-align:-.42em}
+.trophy-display .trophy-image{width:min(74vw,300px);height:min(74vw,300px);max-width:100%;object-fit:contain;transform:scale(1.12);transform-origin:center}
+@media(max-width:370px){.app>.topbar .round .ui-icon{transform:scale(1.16)}.action.hint .ui-icon{transform:scale(1.18)}}
