@@ -405,3 +405,10 @@ body.dark-mode .shop-v2 .dex-filter.active{background:#526990}
 .gacha-pull .fish-icon{width:1.65em;height:1.65em;vertical-align:-.42em}
 .trophy-display .trophy-image{width:min(74vw,300px);height:min(74vw,300px);max-width:100%;object-fit:contain;transform:scale(1.12);transform-origin:center}
 @media(max-width:370px){.app>.topbar .round .ui-icon{transform:scale(1.16)}.action.hint .ui-icon{transform:scale(1.18)}}
+
+/* v1.3.3: breathing room between the five header medals */
+.app>.topbar{grid-template-columns:minmax(72px,1fr) repeat(5,minmax(0,40px))!important;column-gap:clamp(7px,2.1vw,12px)!important}
+.app>.topbar .round{width:100%;height:40px;min-width:0}
+.app>.topbar .round .ui-icon{transform:scale(1.10)}
+@media(max-width:390px){.app>.topbar{grid-template-columns:minmax(65px,1fr) repeat(5,minmax(0,37px))!important;column-gap:clamp(5px,1.5vw,8px)!important}.app>.topbar .round{height:37px}.app>.topbar .round .ui-icon{transform:scale(1.07)}}
+@media(max-width:340px){.app>.topbar{grid-template-columns:minmax(58px,1fr) repeat(5,minmax(0,33px))!important;column-gap:4px!important}.app>.topbar .round{height:33px}.app>.topbar .round .ui-icon{transform:scale(1.03)}}
