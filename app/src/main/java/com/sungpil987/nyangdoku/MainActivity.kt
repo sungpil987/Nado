@@ -233,7 +233,10 @@ class MainActivity : android.app.Activity() {
                     sendCloudError("클라우드 저장 충돌을 해결하지 못했어. 다시 시도해줘")
                     return@addOnSuccessListener
                 }
-                val snapshot = opened.data
+                val snapshot = opened.data ?: run {
+                    sendCloudError("클라우드 저장을 열 수 없었어. 다시 시도해줘")
+                    return@addOnSuccessListener
+                }
                 try {
                     val cloudBytes = snapshot.snapshotContents.readFully()
                     client.discardAndClose(snapshot)
@@ -284,7 +287,11 @@ class MainActivity : android.app.Activity() {
                 sendCloudError("클라우드 저장 충돌이 생겼어. 동기화를 다시 눌러줘")
                 return@addOnSuccessListener
             }
-            val snapshot = opened.data
+            val snapshot = opened.data ?: run {
+                cloudWriteInProgress = false
+                sendCloudError("클라우드 저장을 열 수 없었어. 다시 시도해줘")
+                return@addOnSuccessListener
+            }
             try {
                 snapshot.snapshotContents.writeBytes(json.toByteArray(Charsets.UTF_8))
                 val metadata = SnapshotMetadataChange.Builder()
