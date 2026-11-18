@@ -412,3 +412,10 @@ body.dark-mode .shop-v2 .dex-filter.active{background:#526990}
 .app>.topbar .round .ui-icon{transform:scale(1.10)}
 @media(max-width:390px){.app>.topbar{grid-template-columns:minmax(65px,1fr) repeat(5,minmax(0,37px))!important;column-gap:clamp(5px,1.5vw,8px)!important}.app>.topbar .round{height:37px}.app>.topbar .round .ui-icon{transform:scale(1.07)}}
 @media(max-width:340px){.app>.topbar{grid-template-columns:minmax(58px,1fr) repeat(5,minmax(0,33px))!important;column-gap:4px!important}.app>.topbar .round{height:33px}.app>.topbar .round .ui-icon{transform:scale(1.03)}}
+
+.play-games-panel{margin:16px 0;padding:13px;background:#f6f1ed;border-radius:14px;text-align:left}
+.play-games-panel p{margin:0 0 10px;font-size:12px;color:#74645f}
+.play-games-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.play-games-buttons button{min-height:42px;border:0;border-radius:11px;background:#356fd5;color:#fff;font:14px Jua,sans-serif}
+body.dark-mode .play-games-panel{background:#303d50}
+body.dark-mode .play-games-panel p{color:#d4dfed}

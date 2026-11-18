@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Replace with the numeric Play Games Services project ID from Play Console. -->
+    <string name="game_services_project_id">0</string>
+    <!-- Replace with the score leaderboard ID created in Play Console. -->
+    <string name="leaderboard_score_id"></string>
+</resources>

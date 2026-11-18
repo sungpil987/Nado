@@ -8,7 +8,9 @@
   const regionColor = Array.from({length:12},(_,i)=>`region-${i}`);
   let gameMode='stage',dailyDateKey=null,selectedDateKey=seoulTodayKey(),dailyMonthKey=selectedDateKey.slice(0,7);
   function loadSave(){try{const s=Object.assign({level:1,score:0,hints:2,solved:0,stageCache:{},stageAttempts:{},stageMistakes:{},seenStageKeys:[],dailyPuzzles:{},dailyResults:{},dailyProgress:{},dailyWins:0},JSON.parse(localStorage.getItem(saveKey)||'{}'));if(s.puzzleVersion!==6){s.stageCache={};s.stageAttempts={};s.stageMistakes={};s.seenStageKeys=[];s.puzzleVersion=6}s.stageCache ||= {};s.stageAttempts ||= {};s.stageMistakes ||= {};s.seenStageKeys ||= [];s.dailyPuzzles ||= {};s.dailyResults ||= {};s.dailyProgress ||= {};s.boardProgress ||= {};if(s.qualityVersion!==1){const key='stage:'+s.level;if(!s.boardProgress[key]?.cells?.some(v=>v!==0)){delete s.stageCache[s.level];delete s.stageAttempts[s.level]}s.qualityVersion=1}s.missions ||= {daily:{},weekly:{}};s.attendance ||= {claimed:{},streak:0,last:null};return s}catch{return {level:1,score:0,hints:2,solved:0,stageCache:{},stageAttempts:{},stageMistakes:{},seenStageKeys:[],dailyPuzzles:{},dailyResults:{},dailyProgress:{},dailyWins:0,puzzleVersion:6}}}
-  function persist(){localStorage.setItem(saveKey,JSON.stringify(save))}
+  let cloudSignedIn=false,cloudSyncBusy=false,cloudAutoSyncStarted=false,cloudSaveTimer=null,suppressCloudSave=false;
+  function sendCloudSave(){if(cloudSignedIn&&!suppressCloudSave&&window.NyangdokuAds?.saveCloudSave)window.NyangdokuAds.saveCloudSave(JSON.stringify(save))}
+  function persist(){save.updatedAt=Date.now();localStorage.setItem(saveKey,JSON.stringify(save));if(cloudSignedIn&&!suppressCloudSave){clearTimeout(cloudSaveTimer);cloudSaveTimer=setTimeout(sendCloudSave,5000)}}
   // Stopwatch counts active gameplay only; saved milliseconds survive app restarts.
   let runElapsed=0,runStartedAt=0,runActive=false,runHintUsed=false;
   const runTimeText=ms=>{const sec=Math.floor(Math.max(0,ms)/1000);return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`};
@@ -66,6 +68,45 @@
     if(isBest)stats.records[key]=entry;
     return {ms,isBest,previous,clean,perfect};
   }
+  function mergeCloudSave(localData,cloudData){
+    const localTime=Number(localData.updatedAt)||0,cloudTime=Number(cloudData.updatedAt)||0;
+    const newer=cloudTime>localTime?cloudData:localData,older=newer===localData?cloudData:localData;
+    const merged={...older,...newer,updatedAt:Math.max(localTime,cloudTime)};
+    for(const key of ['ownedCats','ownedBackgrounds','ownedMarks'])merged[key]=[...new Set([...(localData[key]||[]),...(cloudData[key]||[])])];
+    for(const key of ['stageCache','stageAttempts','stageMistakes','seenStageKeys','dailyPuzzles','dailyResults','dailyProgress','boardProgress'])merged[key]={...(older[key]||{}),...(newer[key]||{})};
+    merged.level=Math.max(Number(localData.level)||1,Number(cloudData.level)||1);
+    merged.score=Math.max(Number(localData.score)||0,Number(cloudData.score)||0);
+    merged.coins=Math.max(Number(localData.coins)||0,Number(cloudData.coins)||0);
+    merged.solved=Math.max(Number(localData.solved)||0,Number(cloudData.solved)||0);
+    merged.dailyWins=Math.max(Number(localData.dailyWins)||0,Number(cloudData.dailyWins)||0);
+    const ls=localData.playStats||{},cs=cloudData.playStats||{};
+    if(ls.records||cs.records){const records={...(ls.records||{})};for(const [key,value] of Object.entries(cs.records||{})){if(!records[key]||Number(value.ms)<Number(records[key].ms))records[key]=value}merged.playStats={...ls,...cs,games:Math.max(ls.games||0,cs.games||0),totalMs:Math.max(ls.totalMs||0,cs.totalMs||0),perfect:Math.max(ls.perfect||0,cs.perfect||0),daily:Math.max(ls.daily||0,cs.daily||0),records}}
+    return merged;
+  }
+  function syncCloudNow(){
+    if(cloudSyncBusy)return;
+    if(!window.NyangdokuAds?.syncCloudSave){showToast('Google Play 동기화는 앱에서 이용할 수 있어');return}
+    runPause();cloudSyncBusy=true;window.NyangdokuAds.syncCloudSave(JSON.stringify(save));
+  }
+  window.onPlayGamesStatus=(authenticated,message)=>{
+    cloudSignedIn=!!authenticated;
+    const status=$('playGamesStatus');if(status)status.textContent=message||(authenticated?'Google Play 게임즈 연결됨':'Google Play 게임즈 미연결');
+    if(authenticated&&!cloudAutoSyncStarted){cloudAutoSyncStarted=true;syncCloudNow()}
+  };
+  window.onCloudSaveLoaded=cloudJson=>{
+    cloudSyncBusy=false;
+    let cloudData=null;try{if(cloudJson)cloudData=JSON.parse(cloudJson)}catch{}
+    if(cloudData&&typeof cloudData==='object'){
+      save=mergeCloudSave(save,cloudData);
+      suppressCloudSave=true;localStorage.setItem(saveKey,JSON.stringify(save));persist();suppressCloudSave=false;
+      render();updateCoins();renderCatShop();renderCatDex();renderProfile();
+      if($('shopModal')&&!$('shopModal').classList.contains('hidden'))updateShop();
+      showToast('Google Play 진행 상황 동기화 완료');
+    }else{showToast('Google Play에 진행 상황을 처음 저장했어')}
+    window.NyangdokuAds?.saveCloudSave?.(JSON.stringify(save));
+  };
+  window.onCloudSaveError=message=>{cloudSyncBusy=false;showToast(message||'동기화에 실패했어')};
+  window.onCloudSaveSaved=(ok,message)=>{if(!ok)showToast(message||'클라우드 저장에 실패했어')};
   function renderProfile(){
     const avatar=$('profileCatAvatar');if(avatar)avatar.src=catImage();
     const stats=save.playStats||{games:0,totalMs:0,perfect:0,daily:0,records:{}};
@@ -161,7 +202,7 @@
     rare:{label:'희귀',weight:22},
     epic:{label:'영웅',weight:8}
   };
-  const GACHA_COST=1,GACHA_DUPLICATE_REFUND=0;
+  const GACHA_COST=200,GACHA_DUPLICATE_REFUND=40;
   // Retire removed skins without deleting any other saved game progress.
   const activeSkinIds=new Set(['default',...catCatalog.map(cat=>cat.id)]);
   save.ownedCats=save.ownedCats.filter(id=>activeSkinIds.has(id));
@@ -196,7 +237,7 @@
     $('gachaPrizeImage').alt=cat.name;
     $('gachaPrizeRarity').textContent=rarityConfig[cat.rarity].label+' 등급';
     $('gachaPrizeName').textContent=cat.name;
-    $('gachaPrizeMessage').textContent=duplicate?'중복 획득!':'새로운 고양이 획득!';
+    $('gachaPrizeMessage').textContent=duplicate?`중복 획득! 생선 ${GACHA_DUPLICATE_REFUND}개 환급`:'새로운 고양이 획득!';
     $('gachaCinematicButton').textContent='확인';
     gameTone(cat.rarity==='epic'||cat.rarity==='rare'?'win':'cat');
     vibrateGame(cat.rarity==='epic'||cat.rarity==='rare'?'win':'cat');
@@ -222,7 +263,7 @@
     const info=document.createElement('div');
     const label=document.createElement('small');label.textContent=rarityConfig[cat.rarity].label+' 등급';
     const name=document.createElement('strong');name.textContent=cat.name;
-    const message=document.createElement('p');message.textContent=duplicate?'중복 획득!':'새로운 고양이 획득!';
+    const message=document.createElement('p');message.textContent=duplicate?`중복 획득! 생선 ${GACHA_DUPLICATE_REFUND}개 환급`:'새로운 고양이 획득!';
     info.append(label,name,message);result.append(image,info);
     gachaPending={cat,duplicate};gachaAnimating=true;
     const stage=$('gachaCinematic');
@@ -560,7 +601,7 @@
     bad.forEach(i=>$('board').children[i].classList.add('error'));if(bad.size){showToast('이 배치로는 답이 안 맞아. 빨간 칸을 다시 확인해봐');$('caption').textContent='정답이 아니거나 규칙이 겹친 칸을 살펴봐';return}
     if(placed.length===puzzle.n&&validPlacement(placed))finish()}
   function celebrate(){if(!preferences.animation)return;document.querySelectorAll('.cell.cat').forEach((el,i)=>{el.classList.remove('celebrate-cat');el.style.setProperty('--celebrate-delay',`${i*45}ms`);void el.offsetWidth;el.classList.add('celebrate-cat')});const layer=document.createElement('div');layer.className='confetti-layer';layer.setAttribute('aria-hidden','true');const palette=['#f3be4f','#eaa7c6','#67b3db','#a9d48e','#b4a6df','#fff'];for(let i=0;i<70;i++){const piece=document.createElement('i');piece.style.setProperty('--x',`${Math.random()*100}vw`);piece.style.setProperty('--delay',`${Math.random()*220}ms`);piece.style.setProperty('--duration',`${1.4+Math.random()*.9}s`);piece.style.setProperty('--spin',`${Math.floor(Math.random()*900-450)}deg`);piece.style.setProperty('--piece-color',palette[i%palette.length]);layer.appendChild(piece)}document.body.appendChild(layer);setTimeout(()=>layer.remove(),3500);$('modal').classList.add('celebration-modal');setTimeout(()=>$('modal').classList.remove('celebration-modal'),900)}
-  function finish(){if(!clearPending){const result=recordResult();runPause();clearPending=true;gameTone('win');vibrateGame('win');clearBoard();const wasDaily=gameMode==='daily',alreadyWon=wasDaily&&save.dailyResults[dailyDateKey]?.completed;if(!wasDaily)save.solved++;else if(!alreadyWon){save.dailyWins=(save.dailyWins||0)+1;save.dailyResults[dailyDateKey]={completed:true,mistakes};save.dailyProgress[dailyDateKey]={mistakes,completed:true}}const coinReward=(!wasDaily||!alreadyWon)?puzzle.n*10:0;if(coinReward)recordMissionWin(wasDaily,!alreadyWon,mistakes===0);if(coinReward){save.score+=puzzle.n*100;save.coins+=coinReward}persist();$('score').textContent=save.score;$('hints').textContent=save.hints;updateCoins();$('caption').textContent=wasDaily?'챌린지를 완료했다냥!':'완벽하다냥!';$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modalTitle').textContent=wasDaily?'챌린지 완료다냥!':'참 잘했다냥!';$('modalText').textContent=wasDaily?`${dateLabel(dailyDateKey)} 완료! 생선 ${coinReward}생선을 얻었다냥!`:`레벨 ${save.level} 클리어! 생선 ${coinReward}생선을 얻었다냥!`;$('modalButton').textContent=wasDaily?'달력으로':'다음 레벨 →';const recordEl=$('recordResult');recordEl.classList.remove('hidden');recordEl.textContent=(result.isBest?'🏆 NEW RECORD! · ':'클리어 기록 · ')+runTimeText(result.ms)+(result.clean?' · 힌트 없이':' · 힌트 사용')+(result.perfect?' · 퍼펙트!':'');celebrate();clearTimer=setTimeout(()=>{$('modal').classList.remove('hidden');$('modal').classList.add('reward-pop');setTimeout(()=>$('modal').classList.remove('reward-pop'),850)},1000)}}
+  function finish(){if(!clearPending){const result=recordResult();runPause();clearPending=true;gameTone('win');vibrateGame('win');clearBoard();const wasDaily=gameMode==='daily',alreadyWon=wasDaily&&save.dailyResults[dailyDateKey]?.completed;if(!wasDaily)save.solved++;else if(!alreadyWon){save.dailyWins=(save.dailyWins||0)+1;save.dailyResults[dailyDateKey]={completed:true,mistakes};save.dailyProgress[dailyDateKey]={mistakes,completed:true}}const coinReward=(!wasDaily||!alreadyWon)?puzzle.n*10:0;if(coinReward)recordMissionWin(wasDaily,!alreadyWon,mistakes===0);if(coinReward){save.score+=puzzle.n*100;save.coins+=coinReward}persist();if(coinReward)window.NyangdokuAds?.submitLeaderboardScore?.(save.score);$('score').textContent=save.score;$('hints').textContent=save.hints;updateCoins();$('caption').textContent=wasDaily?'챌린지를 완료했다냥!':'완벽하다냥!';$('tutorialDemo').classList.add('hidden');$('tutorialCounter').classList.add('hidden');$('modalTitle').textContent=wasDaily?'챌린지 완료다냥!':'참 잘했다냥!';$('modalText').textContent=wasDaily?`${dateLabel(dailyDateKey)} 완료! 생선 ${coinReward}생선을 얻었다냥!`:`레벨 ${save.level} 클리어! 생선 ${coinReward}생선을 얻었다냥!`;$('modalButton').textContent=wasDaily?'달력으로':'다음 레벨 →';const recordEl=$('recordResult');recordEl.classList.remove('hidden');recordEl.textContent=(result.isBest?'🏆 NEW RECORD! · ':'클리어 기록 · ')+runTimeText(result.ms)+(result.clean?' · 힌트 없이':' · 힌트 사용')+(result.perfect?' · 퍼펙트!':'');celebrate();clearTimer=setTimeout(()=>{$('modal').classList.remove('hidden');$('modal').classList.add('reward-pop');setTimeout(()=>$('modal').classList.remove('reward-pop'),850)},1000)}}
   function showToast(msg){const el=$('toast');el.textContent=msg.endsWith('냥!')?msg:msg.replace(/[.! ]+$/,'')+'다냥!';el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),1900)}
   let milestoneAdPending=false;
   function advanceStage(){milestoneAdPending=false;clearPending=false;clearBoard();save.level++;persist();$('modal').classList.add('hidden');render()}
@@ -609,6 +650,8 @@
   $('switchModeBtn').addEventListener('click',switchToStage);
   $('pauseSwitchBtn').addEventListener('click',switchToStage);
   $('profileBtn').addEventListener('click',()=>{runPause();renderProfile();$('profileModal').classList.remove('hidden')});$('profileClose').addEventListener('click',()=>{$('profileModal').classList.add('hidden');runTimerDraw()});
+  $('cloudSyncBtn').addEventListener('click',syncCloudNow);$('leaderboardBtn').addEventListener('click',()=>{if(!window.NyangdokuAds?.showLeaderboard){showToast('Google Play 랭킹은 Android 앱에서 이용할 수 있어');return}window.NyangdokuAds.showLeaderboard()});
+  window.addEventListener('pagehide',()=>{clearTimeout(cloudSaveTimer);sendCloudSave()});
   $('gachaPullBtn').addEventListener('click',gachaDraw);
   $('gachaCinematicButton').addEventListener('click',()=>{if(!gachaAnimating)return;if(!$('gachaCinematic').classList.contains('gacha-show-prize'))gachaReveal();else gachaClose()});
   $('missionBtn').addEventListener('click',openMissions);$('missionCloseX').addEventListener('click',()=> $('missionModal').classList.add('hidden'));$('attendanceClaim').addEventListener('click',claimAttendance);$('dailyMissionTab').addEventListener('click',()=>{missionTab='daily';renderMissions()});$('weeklyMissionTab').addEventListener('click',()=>{missionTab='weekly';renderMissions()});for(const [tab,suffix] of Object.entries({cats:'Cats',dex:'Dex',extras:'Extras'}))$('shopTab'+suffix).addEventListener('click',()=>selectShopTab(tab));$('shopBtn').addEventListener('click',showShop);const closeShop=()=> $('shopModal').classList.add('hidden');$('closeShopBtn').addEventListener('click',closeShop);$('shopCloseX').addEventListener('click',closeShop);$('purchaseAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.buyRemoveAds?.());$('restoreAdsBtn').addEventListener('click',()=>window.NyangdokuAds?.restorePurchases?.());$('rewardHintBtn').addEventListener('click',rewardHints);window.NyangdokuAds?.isAdFree?.();

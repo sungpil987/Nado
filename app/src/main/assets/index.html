@@ -60,7 +60,7 @@
       <div class="settings-version">냥도쿠 v1.1.0 · 설정은 이 기기에 자동 저장</div>
     </div></div>
     <div class="modal hidden" id="pauseModal"><div class="dialog pause-dialog"><div class="pause-symbol">Ⅱ</div><h2>일시정지</h2><p>타이머와 퍼즐을 잠시 멈췄어.</p><strong id="pauseElapsed">00:00</strong><button type="button" id="resumeBtn">▶ 계속 플레이</button><button type="button" id="pauseSwitchBtn" class="pause-secondary">일반 레벨로 돌아가기</button></div></div>
-    <div class="modal hidden" id="profileModal"><div class="dialog profile-dialog"><button type="button" class="modal-close" id="profileClose" aria-label="프로필 닫기">×</button><div class="profile-avatar"><img id="profileCatAvatar" src="1_1.png" alt="장착한 고양이"></div><h2>내 냥도쿠 기록</h2><p class="profile-subtitle">나만의 퍼즐 성장 기록</p><div id="profileStats" class="profile-stats"></div><h3>퍼즐 크기별 최고 기록</h3><div id="profileRecords" class="profile-records"></div><p class="profile-note">시간제한 없음 · 힌트 사용 기록은 별도 집계 · 기록은 이 기기에 저장</p></div></div>
+    <div class="modal hidden" id="profileModal"><div class="dialog profile-dialog"><button type="button" class="modal-close" id="profileClose" aria-label="프로필 닫기">×</button><div class="profile-avatar"><img id="profileCatAvatar" src="1_1.png" alt="장착한 고양이"></div><h2>내 냥도쿠 기록</h2><p class="profile-subtitle">나만의 퍼즐 성장 기록</p><div id="profileStats" class="profile-stats"></div><div class="play-games-panel"><p id="playGamesStatus">Google Play 게임즈 연결 확인 중</p><div class="play-games-buttons"><button type="button" id="cloudSyncBtn">Google Play에 동기화</button><button type="button" id="leaderboardBtn">랭킹 보기</button></div></div><h3>퍼즐 크기별 최고 기록</h3><div id="profileRecords" class="profile-records"></div><p class="profile-note">시간제한 없음 · 힌트 사용 기록은 별도 집계 · 기록은 Google Play에 동기화할 수 있어</p></div></div>
     <div class="modal hidden" id="missionModal"><div class="dialog mission-dialog"><button type="button" class="modal-close" id="missionCloseX" aria-label="미션 닫기">×</button><h2>냥냥 미션</h2><p id="attendanceStatus">출석 확인 중이다냥!</p><button id="attendanceClaim">오늘의 출석 보상 받기</button><p id="missionStreak"></p><div class="mission-tabs"><button id="dailyMissionTab" class="active">일일 미션</button><button id="weeklyMissionTab">주간 미션</button></div><div id="missionList"></div></div></div>
     <div class="modal hidden" id="shopModal">
       <div class="dialog shop-dialog shop-v2">
@@ -80,8 +80,8 @@
               <div class="gacha-title">🐾 냥이 랜덤 뽑기</div>
               <p class="gacha-desc">새로운 냥이를 만나보자! 보유 중인 냥이는 중복 보상으로 바뀌어.</p>
               <div id="gachaRates" class="gacha-rates"></div>
-              <button type="button" id="gachaPullBtn" class="gacha-pull"><img class="fish-icon" src="Fish.png" alt=""> 1생선 · 1회 뽑기</button>
-              <p class="gacha-footnote">테스트 기간: 1생선 뽑기 · 중복 환급 없음 · 기본 냥이는 뽑기에서 제외</p>
+              <button type="button" id="gachaPullBtn" class="gacha-pull"><img class="fish-icon" src="Fish.png" alt=""> 200생선 · 1회 뽑기</button>
+              <p class="gacha-footnote">중복 고양이는 40생선을 돌려받아. 기본 냥이는 뽑기에서 제외돼.</p>
               <div id="gachaResult" class="gacha-result hidden" aria-live="polite"></div>
             </div>
 </section>
